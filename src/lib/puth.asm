@@ -1,41 +1,3 @@
-;; Basic kernel
-
-main:
-    mov ah, 0x0              ;; ah = 0   | set video mode
-    mov al, 0x3              ;; al = 03h | 80x25 color text 
-    int 10h
-
-    mov bx, .success
-    call puts
-
-    cli
-    hlt
-
-.success:
-    db "[Success]: Kernel load successfully", 0
-
-;; prints character in al register
-;; al = character | ascii character to write
-putc:
-    mov ah, 0xe              ;; ah = 0eh | write text in tty mode
-    int 0x10                 ;; print character in al
-    ret
-
-;; prints null terminated string in bx register
-;; bx = string pointer
-puts:
-    pusha                    ;; push all general registers
-.print_char:
-    mov al, [bx]             ;; al = current value in bx
-    cmp al, 0x0
-    je .end                  ;; jump to end if al = 0
-    call putc                ;; print character in al
-    add bx, 0x1              ;; increment bx to get next character
-    jmp .print_char          ;; loop
-.end:
-    popa                     ;; restore all general registers
-    ret
-
 ;; prints hexdecimal in dx register
 ;; dx = hexecimal value
 puth:
@@ -69,5 +31,3 @@ puth:
 
 .string:
     db "0x0000", 0
-
-    times 512-($-$$) db 0x0  ;; pad file with 0s until reach 512 bytes
