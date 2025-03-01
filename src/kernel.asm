@@ -20,10 +20,12 @@ input:
     mov ax, 0
     int 0x16
 
-    call putc
 
     cmp al, 0x0d                            ;; check for 'enter'
     je run_command
+
+    cmp al, 0x08                            ;; check of 'backspace'
+    je .handle_backspace
 
     cmp di, command_string + 100            ;; check for buffer oveflow
     je run_command
@@ -31,9 +33,31 @@ input:
     mov [di], al                            ;; append character in command buffer
     inc di                                  ;; increment di for next character
 
+    call putc
+
+    jmp .key_loop
+
+.handle_backspace:
+    cmp di, command_string
+    je .key_loop
+
+    dec di
+    mov BYTE [di], 0
+
+    mov al, 0x8
+    call putc
+
+    mov al, " "
+    call putc
+
+    mov al, 0x8
+    call putc
+
     jmp .key_loop                           ;; loop
 
 run_command:
+    mov al, 0xd                             ;; print carriage return
+    call putc
     mov al, 0xa                             ;; print new line
     call putc
 
