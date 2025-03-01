@@ -2,37 +2,42 @@
 
 main:
     ;; Setup tty mode 80x25
-    mov ah, 0x0              ;; ah = 0   | set video mode
-    mov al, 0x3              ;; al = 03h | 80x25 color text 
+    mov ah, 0x0                             ;; ah = 0   | set video mode
+    mov al, 0x3                             ;; al = 03h | 80x25 color text 
     int 10h
 
+    ;; Show header
     mov si, header
     call puts
 
 input:
+    ;; Show input indicator
     mov si, input_indicator
     call puts
 
-    mov di, command_string
+    mov di, command_string                  ;; set di to command_string buffer
 .key_loop:
     mov ax, 0
     int 0x16
 
     call putc
 
-    cmp al, 0x0d
+    cmp al, 0x0d                            ;; check for 'enter'
     je run_command
 
-    mov [di], al
-    inc di
+    cmp di, command_string + 100            ;; check for buffer oveflow
+    je run_command
 
-    jmp .key_loop
+    mov [di], al                            ;; append character in command buffer
+    inc di                                  ;; increment di for next character
+
+    jmp .key_loop                           ;; loop
 
 run_command:
-    mov al, 0xa
+    mov al, 0xa                             ;; print new line
     call putc
 
-    mov BYTE [di], 0
+    mov BYTE [di], 0                        ;; make command null terminated
 
     ;; Check 'help' command
     mov si, command_string
@@ -50,17 +55,26 @@ run_command:
 
     jmp .command_not_found
 
+;; Execute command help
 .command_help:
     mov si, help_command_output
     call puts
 
     jmp input
 
+;; Execute command reboot
 .command_reboot:
     jmp 0xffff:0x0
 
+;; Execute when command not found
 .command_not_found:
-    mov si, command_not_found_string
+    mov si, command_not_found_string_begin
+    call puts
+
+    mov si, command_string
+    call puts
+    
+    mov si, command_not_found_string_end
     call puts
 
     jmp input
@@ -86,8 +100,10 @@ input_indicator:
 command_file_string:
     db "running file browser command...", 0xd, 0xa, 0
 
-command_not_found_string:
-    db "Command not found :(", 0xd, 0xa, 0
+command_not_found_string_begin:
+    db "Command '", 0
+command_not_found_string_end:
+    db "' not found :(", 0xd, 0xa, 0
 
 help_command:
     db "help", 0
@@ -95,8 +111,8 @@ help_command:
 reboot_command:
     db "reboot", 0
 help_command_output:
-    db "    help                   -- show all available commands", 0xd, 0xa
-    db "    reboot                 -- reboot pc", 0xd, 0xa, 0
+    db " - help                   -- show all available commands", 0xd, 0xa
+    db " - reboot                 -- reboot pc", 0xd, 0xa, 0
 
 
 command_string:
