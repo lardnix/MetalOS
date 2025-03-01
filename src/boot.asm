@@ -16,7 +16,7 @@
 
 .read_disk:
     mov ah, 0x2              ;; ah = 02h | read disk sectors
-    mov al, 0x1              ;; al = dh  | number of sectors to read
+    mov al, 0x2              ;; al = dh  | number of sectors to read
     int 0x13
     jc .read_disk
 

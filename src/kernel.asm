@@ -53,6 +53,13 @@ run_command:
     cmp ax, 1
     je .command_reboot
 
+    ;; Check 'reboot' command
+    mov si, command_string
+    mov di, clear_command
+    call str_equal
+    cmp ax, 1
+    je .command_clear
+
     jmp .command_not_found
 
 ;; Execute command help
@@ -65,6 +72,16 @@ run_command:
 ;; Execute command reboot
 .command_reboot:
     jmp 0xffff:0x0
+
+;; Execute command clear
+.command_clear:
+    ;; This clear entire
+    ;; Setup tty mode 80x25
+    mov ah, 0x0                             ;; ah = 0   | set video mode
+    mov al, 0x3                             ;; al = 03h | 80x25 color text 
+    int 10h
+
+    jmp input
 
 ;; Execute when command not found
 .command_not_found:
@@ -107,14 +124,17 @@ command_not_found_string_end:
 
 help_command:
     db "help", 0
+help_command_output:
+    db " - help                   -- show all available commands", 0xd, 0xa
+    db " - clear                  -- clear entire screen", 0xd, 0xa,
+    db " - reboot                 -- reboot pc", 0xd, 0xa, 0
 
 reboot_command:
     db "reboot", 0
-help_command_output:
-    db " - help                   -- show all available commands", 0xd, 0xa
-    db " - reboot                 -- reboot pc", 0xd, 0xa, 0
 
+clear_command:
+    db "clear", 0
 
 command_string:
 
-    times 512-($-$$) db 0x0  ;; pad file with 0s until reach 512 bytes
+    times 1024-($-$$) db 0x0  ;; pad file with 0s until reach 512 bytes
