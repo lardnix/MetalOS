@@ -21,7 +21,7 @@ puth:
     sub bx, cx               ;; move string to the current digit
     mov [bx], al             ;; move character into string
     ror dx, 4                ;; rotate left to get next digit
-    add cx, 1                ;; increment cx to get next character
+    inc cx                   ;; increment cx to get next character
     jmp .loop
 .end:
     mov bx, .string

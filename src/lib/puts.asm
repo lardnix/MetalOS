@@ -7,7 +7,7 @@ puts:
     cmp al, 0x0
     je .end                  ;; jump to end if al = 0
     call putc                ;; print character in al
-    add si, 0x1              ;; increment bx to get next character
+    inc si                   ;; increment bx to get next character
     jmp .print_char          ;; loop
 .end:
     popa                     ;; restore all general registers
