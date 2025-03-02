@@ -146,44 +146,53 @@ command_clear:
 ;; ========================================================
 command_dir:
     mov si, dir_command_label
-    call puts
+    call puts                               ;; print label of dir command
 
     push es
-    push bx
+    push bx                                 ;; save current es:bx
 
     mov bx, boot_segment
     mov es, bx
-    mov bx, boot_offset
+    mov bx, boot_offset                     ;; load boot segment in es:bx
 
-    mov cx, [es:bx + BPB_number_of_root_dir_entries_offset]
+    mov cx, [es:bx + BPB_number_of_root_dir_entries_offset] ;; save max root entries in cx
 
     mov bx, root_segment
     mov es, bx
-    mov bx, root_offset
-
-    mov si, root_entry_file_name_offset
+    mov bx, root_offset                     ;; load boot segment in es:bx
 
 .file_loop:
-    mov ax, [es:bx + si]
-    cmp ax, 0
+    mov ax, [es:bx]
+    cmp ax, 0                               ;; if first byte is 0, terminate loop
     je .done
 
-    call print_entry
+    call print_entry                        ;; print entry of file
 
     mov al, 0xd
     call putc
 
     mov al, 0xa
-    call putc
+    call putc                               ;; put new line
 
-    add si, root_entry_size
-    loop .file_loop
+    add bx, root_entry_size                 ;; add root entry size in bx to point to the next entry
+    loop .file_loop                         ;; loop
 
 .done:
     pop bx
-    pop es
-    jmp input
+    pop es                                  ;; restore current es:bx
 
+    mov al, 0xd
+    call putc
+
+    mov al, 0xa
+    call putc                               ;; put new line
+
+    jmp input                               ;; process next input
+
+
+;; ========================================================
+;; Print file entry for dir command
+;; ========================================================
 print_entry:
     call print_file_name
 
@@ -191,13 +200,23 @@ print_entry:
     call putc
 
     call print_file_extension
+
+    mov al, " "
+    call putc
+
+    call print_file_size
+
     ret
 
+;; ========================================================
+;; Print file name of root entry in es:bx
+;; ========================================================
 print_file_name:
     push cx
     push si
 
     mov cx, 8
+    xor si, si
 .print_loop:
     mov al, [es:bx + si]
     call putc
@@ -209,12 +228,15 @@ print_file_name:
     pop cx
     ret
 
+;; ========================================================
+;; Print file extension of root entry in es:bx
+;; ========================================================
 print_file_extension:
     push cx
     push si
 
     mov cx, 3
-    add si, 8
+    mov si, 8
 .print_loop:
     mov al, [es:bx + si]
     call putc
@@ -225,6 +247,43 @@ print_file_extension:
     pop si
     pop cx
     ret
+
+;; ========================================================
+;; Print file extension of root entry in es:bx
+;; ========================================================
+print_file_size:
+    push cx
+
+    mov eax, [es:bx + root_entry_file_size_offset] ;; move file size into eax
+    mov di, print_file_size_buffer_end
+    
+    mov ecx, 10
+    ;; Add null termination
+    dec di
+    mov byte [di], 0
+
+.convert:
+    xor dx, dx
+    div ecx
+    add dl, '0'
+
+    dec di
+    mov byte [di], dl
+    test eax, eax
+    jnz .convert
+
+    mov si, di
+    call puts
+
+    mov si, print_file_size_string
+    call puts
+
+    pop cx
+    ret
+
+print_file_size_buffer: rb 11
+print_file_size_buffer_end:
+print_file_size_string: db " bytes", 0
 
 ;; ========================================================
 ;; Execute when command not found
@@ -286,7 +345,8 @@ dir_command:
     db "dir", 0
 
 dir_command_label:
-    db "NAME     EXT", 0xd, 0xa, 0xd, 0xa, 0
+    db "Name     Ext Size", 0xd, 0xa
+    db "----     --- ----", 0xd, 0xa, 0xd, 0xa, 0
 
 command_string:
     times 100 db 0
