@@ -15,6 +15,10 @@ $(OS): $(BIN) $(HD) $(BOOT) $(KERNEL)
 	dd if=$(BOOT) of=$(HD) bs=512 seek=0 conv=notrunc
 	mcopy -o -i $(HD) $(KERNEL) ::/kernel.bin
 
+	echo "Hello, World!" > test.txt
+	mcopy -o -i $(HD) test.txt ::/test.txt
+	rm test.txt
+
 $(HD): $(BUILD)
 	dd if=/dev/zero of=$(HD) bs=512 count=2880
 	mkfs.fat -F12 $(HD)
