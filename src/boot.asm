@@ -1,8 +1,5 @@
 ;; Basic boot loader
 
-    bits 16                                 ;; set mode 16 bits
-    org 0x7c00                              ;; origin of boot code
-
     jmp short boot
     nop
 
@@ -29,6 +26,13 @@ volume_label:               db "OS VOLUME  "
 file_system:                db "FAT     "
 
 boot:
+    ;; ========================================================
+    ;; Realocate program manually
+    ;; ========================================================
+    mov ax, 0x7c0
+    mov ds, ax
+    mov es, ax
+
     ;; ========================================================
     ;; Calculate LBA(Logical Blocking Adressing) for fat table
     ;; ========================================================
