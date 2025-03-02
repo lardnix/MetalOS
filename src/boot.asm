@@ -233,10 +233,10 @@ include "lib/puth.asm"
 fat_segment    = 0x1000
 fat_offset     = 0x0000
 
-root_segment   = 0x2000
+root_segment   = 0x1800
 root_offset    = 0x0000
 
-kernel_segment = 0x3000
+kernel_segment = 0x2000
 kernel_offset  = 0x0000
 
 kernel_loaded_string: db "Kernel loaded successfully...", 0
