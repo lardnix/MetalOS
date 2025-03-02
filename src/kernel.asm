@@ -77,12 +77,19 @@ run_command:
     cmp ax, 1
     je .command_reboot
 
-    ;; Check 'reboot' command
+    ;; Check 'clear' command
     mov si, command_string
     mov di, clear_command
     call str_equal
     cmp ax, 1
     je .command_clear
+
+    ;; Check 'dir' command
+    mov si, command_string
+    mov di, dir_command
+    call str_equal
+    cmp ax, 1
+    je .command_dir
 
     jmp .command_not_found
 
@@ -104,6 +111,19 @@ run_command:
     mov ah, 0x0                             ;; ah = 0   | set video mode
     mov al, 0x3                             ;; al = 03h | 80x25 color text 
     int 10h
+
+    jmp input
+
+;; Execute command clear
+.command_dir:
+    mov si, command_not_implemented_string_begin
+    call puts
+
+    mov si, command_string
+    call puts
+
+    mov si, command_not_implemented_string_end
+    call puts
 
     jmp input
 
@@ -130,16 +150,11 @@ end_program:
 %include "str_equal.asm"
 
 header:
-    db "Welcome to OS", 0xd, 0xa
-    db "-------------", 0xd, 0xa, 0xd, 0xa
-
+    db "Welcome to OS", 0xd, 0xa, 0xd, 0xa,
     db "type 'help' to list commands", 0xd, 0xa, 0xd, 0xa, 0
 
 input_indicator:
     db "> ", 0
-
-command_file_string:
-    db "running file browser command...", 0xd, 0xa, 0
 
 command_not_found_string_begin:
     db "Command '", 0
@@ -147,11 +162,17 @@ command_not_found_string_end:
     db "' not found :(", 0xd, 0xa, 0xd, 0xa
     db "Type 'help' to see command list", 0xd, 0xa, 0xd, 0xa, 0
 
+command_not_implemented_string_begin:
+    db "Command '", 0
+command_not_implemented_string_end:
+    db "' is not implemented yet :(", 0xd, 0xa, 0xd, 0xa, 0
+
 help_command:
     db "help", 0
 help_command_output:
     db " - help                   -- show all available commands", 0xd, 0xa
     db " - clear                  -- clear entire screen", 0xd, 0xa,
+    db " - dir                    -- list root dir", 0xd, 0xa,
     db " - reboot                 -- reboot pc", 0xd, 0xa, 0xd, 0xa, 0
 
 reboot_command:
@@ -159,6 +180,9 @@ reboot_command:
 
 clear_command:
     db "clear", 0
+
+dir_command:
+    db "dir", 0
 
 command_string:
     times 100 db 0
