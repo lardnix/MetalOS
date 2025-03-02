@@ -1,5 +1,4 @@
 ;; Basic boot loader
-
     jmp short boot
     nop
 
@@ -32,6 +31,9 @@ boot:
     mov ax, 0x7c0
     mov ds, ax
     mov es, ax
+    xor ax, ax
+    mov ss, ax
+    mov sp, 0x7c00
 
     ;; ========================================================
     ;; Calculate LBA(Logical Blocking Adressing) for fat table
@@ -43,17 +45,16 @@ boot:
     ;; ========================================================
     ;; Load fat table in root_buffer
     ;; ========================================================
-    mov bx, 0x1000                          ;; local to put the fat table in memory
-    mov [fat_buffer], bx                    ;; save it in fat_buffer
+    mov bx, fat_segment                     ;; segment to put fat table
+    mov es, bx
+    mov bx, fat_offset                      ;; offset to put fat table
 
     mov ax, [fat_lba]                       ;; move fat_lba to ax
     call lba_to_chs                         ;; call lba_to_chs and pupulate ch, cl and dh
 
-    mov ah, 0x2                             ;; disk read sectors
     mov al, [sectors_per_fat]               ;; number of sectors
     mov dl, byte [drive_number]             ;; drive number
-    mov bx, [fat_buffer]                    ;; move into bx the fat_buffer pointer
-    int 0x13                                ;; read disk and put pointer in es:bx
+    call read_disk
 
     ;; ========================================================
     ;; Calculate LBA(Logical Blocking Adressing) for root directory
@@ -82,23 +83,25 @@ boot:
     ;; ========================================================
     ;; Load root directory in root_buffer
     ;; ========================================================
-    mov bx, 0x2000                          ;; local to put the root directory in memory
-    mov [root_buffer], bx                   ;; save it in root_buffer
+    mov bx, root_segment                    ;; segment to put root directory
+    mov es, bx
+    mov bx, root_offset                     ;; offset to put root directory
 
     mov ax, [root_lba]                      ;; move root_lba to ax
     call lba_to_chs                         ;; call lba_to_chs and pupulate ch, cl and dh
 
-    mov ah, 0x2                             ;; disk read sectors
     mov al, [root_size]                     ;; number of sectors
     mov dl, byte [drive_number]             ;; drive number
-    mov bx, [root_buffer]                   ;; move into bx the root_buffer pointer
-    int 0x13                                ;; read disk and put pointer in es:bx
+    call read_disk
 
     ;; ========================================================
     ;; Get the first cluster of the kernel
     ;; ========================================================
     ;; This code assumes that the kernel is the first entry of the root directory
-    mov bx, [root_buffer]                   ;; move to bx the root_buffer
+    mov bx, root_segment                    ;; segment of root directory
+    mov es, bx
+    mov bx, root_offset                     ;; offset of root directory
+
     mov ax, [es:bx + 0x1a]                  ;; get the first cluster by offset the root directory by 0x1a
     mov [kernel_cluster], ax                ;; save in kernel_cluster
 
@@ -114,17 +117,22 @@ boot:
     call cluster_to_lba
     call lba_to_chs
 
-    mov ah, 0x2                             ;; disk read sectors
     mov al, 1                               ;; number of sectors (read 1 at time)
     mov dl, byte [drive_number]             ;; drive number
-    int 0x13                                ;; read disk and put pointer in es:bx
+    call read_disk
 
     ;; ========================================================
     ;; Calculate next cluster of the kernel
     ;; ========================================================
     ;; NextClusterEntry = cluster * 3 / 2
+    push es
+    push bx
+
+    mov bx, fat_segment
+    mov es, bx
+    mov bx, fat_offset
+
     mov ax, [kernel_cluster]
-    mov si, [fat_buffer]
 
     mov cx, 3
     mul cx                                  ;; multiply cluster by 3
@@ -132,8 +140,11 @@ boot:
     xor dx, dx
     div cx                                  ;; divide cluster by 2
 
-    add si, ax
-    mov ax, [si]                            ;; get next cluster
+    add bx, ax
+    mov ax, [es:bx]                         ;; get next cluster
+
+    pop bx
+    pop es
 
     test dx, dx
     jz .even                                ;; test remaining of division
@@ -156,11 +167,15 @@ boot:
     mov si, kernel_loaded_string
     call puts
 
-    mov ax, kernel_segment
+    mov bx, kernel_segment
+    mov es, bx
+    mov bx, kernel_offset
 
-    mov es, ax
-    mov ds, ax
-    mov ss, ax
+    mov ax, kernel_segment                  ;; move to ax the kernel segment
+
+    mov es, ax                              ;; setup es
+    mov ds, ax                              ;; setup ds
+    mov ss, ax                              ;; setup ss
 
     jmp kernel_segment:kernel_offset        ;; jump to kernel
 
@@ -194,24 +209,45 @@ lba_to_chs:
 
     ret
 
-%include "putc.asm"
-%include "puts.asm"
-%include "puth.asm"
+;; Read disk
+read_disk:
+    mov ah, 0x2
+    int 0x13
+    jc .error
+    ret
+.error:
+    mov si, disk_error_string
+    call puts
 
-fat_lba:     dw 0
-fat_buffer:  dw 0
+    mov dh, 0
+    mov dl, ah
+    call puth
 
-root_lba:    dw 0
-root_size:   db 0
-root_buffer: dw 0
+    cli
+    hlt
 
-kernel_cluster: dw 0
-kernel_buffer:  dw 0
+include "lib/putc.asm"
+include "lib/puts.asm"
+include "lib/puth.asm"
 
-kernel_segment: equ 0x3000
-kernel_offset: equ 0x0000
+fat_segment    = 0x1000
+fat_offset     = 0x0000
+
+root_segment   = 0x2000
+root_offset    = 0x0000
+
+kernel_segment = 0x3000
+kernel_offset  = 0x0000
 
 kernel_loaded_string: db "Kernel loaded successfully...", 0
+disk_error_string: db "Can't read disk... status: ", 0
+
+kernel_cluster: rw 1
+
+fat_lba:     rw 1
+
+root_lba:    rw 1
+root_size:   rb 1
 
     times 510-($-$$) db 0x0                 ;; pad file with 0s until reach 510 bytes
     dw 0xaa55                               ;; BIOS magic number

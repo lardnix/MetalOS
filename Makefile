@@ -20,10 +20,10 @@ $(HD): $(BUILD)
 	mkfs.fat -F12 $(HD)
 
 $(BOOT): $(BIN) $(SRC)/boot.asm
-	nasm -f bin -i $(LIB) -o $(BOOT) $(SRC)/boot.asm
+	fasm $(SRC)/boot.asm $(BOOT)
 
 $(KERNEL): $(BIN) $(SRC)/kernel.asm
-	nasm -f bin -i $(LIB) -o $(KERNEL) $(SRC)/kernel.asm
+	fasm $(SRC)/kernel.asm $(KERNEL)
 
 $(BIN): $(BUILD)
 	mkdir -p $(BIN)

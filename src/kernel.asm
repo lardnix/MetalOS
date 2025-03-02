@@ -144,13 +144,13 @@ end_program:
     cli
     hlt
 
-%include "putc.asm"
-%include "puts.asm"
-%include "puth.asm"
-%include "str_equal.asm"
+include "lib/putc.asm"
+include "lib/puts.asm"
+include "lib/puth.asm"
+include "lib/str_equal.asm"
 
 header:
-    db "Welcome to OS", 0xd, 0xa, 0xd, 0xa,
+    db "Welcome to OS", 0xd, 0xa, 0xd, 0xa
     db "type 'help' to list commands", 0xd, 0xa, 0xd, 0xa, 0
 
 input_indicator:
@@ -171,8 +171,8 @@ help_command:
     db "help", 0
 help_command_output:
     db " - help                   -- show all available commands", 0xd, 0xa
-    db " - clear                  -- clear entire screen", 0xd, 0xa,
-    db " - dir                    -- list root dir", 0xd, 0xa,
+    db " - clear                  -- clear entire screen", 0xd, 0xa
+    db " - dir                    -- list root dir", 0xd, 0xa
     db " - reboot                 -- reboot pc", 0xd, 0xa, 0xd, 0xa, 0
 
 reboot_command:
