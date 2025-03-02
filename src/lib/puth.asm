@@ -1,4 +1,8 @@
-;; prints hexdecimal in dx register
+;; ========================================================
+;; Prints hexdecimal in dx register
+;; ========================================================
+;; for now it expect puts included in assembly file
+
 ;; dx = hexecimal value
 puth:
     pusha                    ;; push all general registers

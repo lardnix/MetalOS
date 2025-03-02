@@ -1,4 +1,7 @@
-;; prints character in al register
+;; ========================================================
+;; Prints character in al register
+;; ========================================================
+
 ;; al = character | ascii character to write
 putc:
     mov ah, 0xe              ;; ah = 0eh | write text in tty mode

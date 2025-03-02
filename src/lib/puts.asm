@@ -1,12 +1,17 @@
-;; prints null terminated string in bx register
-;; bx = string pointer
+;; ========================================================
+;; Prints null terminated string in si register
+;; ========================================================
+
+;; si = string pointer
 puts:
+    push si
 .print_char:
-    mov al, [si]             ;; al = current value in si
+    lodsb                    ;; load ds:si in al and increment si
     cmp al, 0x0
     je .end                  ;; jump to end if al = 0
-    call putc                ;; print character in al
-    inc si                   ;; increment bx to get next character
+    mov ah, 0xe
+    int 0x10                 ;; print character in al
     jmp .print_char          ;; loop
 .end:
+    pop si
     ret

@@ -1,4 +1,7 @@
-;; Compare 2 strings in si and di and return if this strings are equal in ax
+;; ========================================================
+;; Compare 2 null terminated strings in si and di and return if this strings are equal in ax
+;; ========================================================
+
 ;; si = pointer to first string
 ;; di = pointer to second string
 str_equal:
