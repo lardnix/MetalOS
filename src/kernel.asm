@@ -198,9 +198,13 @@ print_entry:
 
     mov al, " "
     call putc
+    mov al, " "
+    call putc
 
     call print_file_extension
 
+    mov al, " "
+    call putc
     mov al, " "
     call putc
 
@@ -345,8 +349,8 @@ dir_command:
     db "dir", 0
 
 dir_command_label:
-    db "Name     Ext Size", 0xd, 0xa
-    db "----     --- ----", 0xd, 0xa, 0xd, 0xa, 0
+    db "Name      Ext  Size", 0xd, 0xa
+    db "----      ---  ----", 0xd, 0xa, 0xd, 0xa, 0
 
 command_string:
     times 100 db 0
