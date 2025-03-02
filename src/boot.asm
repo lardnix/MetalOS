@@ -156,6 +156,7 @@ boot:
 
     mov es, ax
     mov ds, ax
+    mov ss, ax
 
     jmp kernel_segment:kernel_offset        ;; jump to kernel
 
