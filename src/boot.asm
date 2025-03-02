@@ -25,6 +25,8 @@ volume_id:                  dd 0
 volume_label:               db "OS VOLUME  "
 file_system:                db "FAT     "
 
+include "memory_layout.asm"
+
 boot:
     ;; ========================================================
     ;; Calculate LBA(Logical Blocking Adressing) for fat table
@@ -216,8 +218,6 @@ read_disk:
 
     cli
     hlt
-
-include "memory_layout.asm"
 
 include "lib/putc.asm"
 include "lib/puts.asm"
