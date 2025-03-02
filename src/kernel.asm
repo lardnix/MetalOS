@@ -4,7 +4,7 @@ main:
     ;; Setup tty mode 80x25
     mov ah, 0x0                             ;; ah = 0   | set video mode
     mov al, 0x3                             ;; al = 03h | 80x25 color text 
-    int 10h
+    int 0x10
 
     ;; Show header
     mov si, header
@@ -160,5 +160,4 @@ clear_command:
     db "clear", 0
 
 command_string:
-
-    times 1024-($-$$) db 0x0  ;; pad file with 0s until reach 512 bytes
+    times 100 db 0

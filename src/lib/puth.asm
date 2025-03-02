@@ -24,7 +24,7 @@ puth:
     inc cx                   ;; increment cx to get next character
     jmp .loop
 .end:
-    mov bx, .string
+    mov si, .string
     call puts
     popa                     ;; restore all general registers
     ret
