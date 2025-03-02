@@ -1,7 +1,7 @@
 
 # MetalOS
 
-[!WARNING]
+> [!WARNING]
 > This project is not finished yet
 
 A tiny a kernel bare metal based operating system.
