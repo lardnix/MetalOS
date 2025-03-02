@@ -1,4 +1,5 @@
 ;; Basic boot loader
+    org 0x7c00
     jmp short boot
     nop
 
@@ -25,16 +26,6 @@ volume_label:               db "OS VOLUME  "
 file_system:                db "FAT     "
 
 boot:
-    ;; ========================================================
-    ;; Realocate program manually
-    ;; ========================================================
-    mov ax, 0x7c0
-    mov ds, ax
-    mov es, ax
-    xor ax, ax
-    mov ss, ax
-    mov sp, 0x7c00
-
     ;; ========================================================
     ;; Calculate LBA(Logical Blocking Adressing) for fat table
     ;; ========================================================
