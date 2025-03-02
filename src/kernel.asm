@@ -144,14 +144,15 @@ command_file_string:
 command_not_found_string_begin:
     db "Command '", 0
 command_not_found_string_end:
-    db "' not found :(", 0xd, 0xa, 0
+    db "' not found :(", 0xd, 0xa, 0xd, 0xa
+    db "Type 'help' to see command list", 0xd, 0xa, 0xd, 0xa, 0
 
 help_command:
     db "help", 0
 help_command_output:
     db " - help                   -- show all available commands", 0xd, 0xa
     db " - clear                  -- clear entire screen", 0xd, 0xa,
-    db " - reboot                 -- reboot pc", 0xd, 0xa, 0
+    db " - reboot                 -- reboot pc", 0xd, 0xa, 0xd, 0xa, 0
 
 reboot_command:
     db "reboot", 0
