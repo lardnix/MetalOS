@@ -101,9 +101,9 @@ boot:
     ;; ========================================================
     ;; Load the kernel
     ;; ========================================================
-    mov bx, kernel_segment                  ;; local to put the kernel
+    mov bx, kernel_segment                  ;; segment to put the kernel
     mov es, bx
-    mov bx, 0
+    mov bx, kernel_offset                   ;; offset to put the kernel
 
 .load_kernel_loop:
     mov ax, [kernel_cluster]
