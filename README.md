@@ -4,7 +4,7 @@
 > [!WARNING]
 > This project is not finished yet
 
-A tiny a kernel bare metal based operating system.
+A tiny a kernel bare metal based operating system. It runs in 16 bits real mode in a floppy disk with 1.44mb.
 
 ## TODOs
 
