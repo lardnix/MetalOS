@@ -9,7 +9,7 @@
 OEM_label:                  db "mkfs.fat"
 sector_size:                dw 512
 sectors_per_cluster:        db 1
-reserved_sectors:           dw 1 ;; reserved for boot
+reserved_sectors:           dw 1            ;; reserved for boot
 number_of_fats:             db 2
 number_of_root_dir_entries: dw 224
 logical_sectors:            dw 2880
@@ -217,18 +217,11 @@ read_disk:
     cli
     hlt
 
+include "memory_layout.asm"
+
 include "lib/putc.asm"
 include "lib/puts.asm"
 include "lib/puth.asm"
-
-fat_segment    = 0x1000
-fat_offset     = 0x0000
-
-root_segment   = 0x1800
-root_offset    = 0x0000
-
-kernel_segment = 0x2000
-kernel_offset  = 0x0000
 
 kernel_loaded_string: db "Kernel loaded successfully...", 0
 disk_error_string: db "Can't read disk... status: ", 0
