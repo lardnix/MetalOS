@@ -5,7 +5,8 @@ include "memory_layout.asm"
 include "lib/fat12/bpb.asm"
 include "lib/fat12/root_entry.asm"
 
-input_string_buffer_size = 100
+input_string_buffer_capacity = 100
+arguments_buffer_capacity = 100
 
 main:
     ;; ========================================================
@@ -25,18 +26,15 @@ main:
     ;; Emulate a basic shell
     ;; ========================================================
 input:
-    ;; ========================================================
-    ;; Show input indicator
-    ;; ========================================================
     mov si, input_indicator
     call print_string
 
     call get_input_string
+    call parse_input_string
 
     jmp run_command
 
-    cli
-    hlt
+    jmp input
 
 ;; ========================================================
 ;; Stores input string in input_string_buffer
@@ -50,7 +48,7 @@ get_input_string:
     cmp al, 0x08                            ;; check of 'backspace'
     je .handle_backspace
 
-    cmp di, input_string + input_string_buffer_size - 1 ;; check for buffer oveflow
+    cmp di, input_string + input_string_buffer_capacity - 1 ;; check for buffer oveflow
     je .overflow
 
     cmp al, 0x0d                            ;; check for 'enter'
@@ -111,11 +109,81 @@ get_input_string:
     mov BYTE [di], 0                        ;; make command null terminated
     ret
 
+;; ========================================================
+;; Parse input_string to separate arguments
+;; ========================================================
+parse_input_string:
+    mov word [argc], 0
+
+    mov di, input_string
+    mov si, input_string
+
+    cmp byte [si], " "
+    je .skip_extra_spaces
+
+.argument_loop:
+    mov al, [si]
+    cmp al, " "
+    je .append_argument
+
+    cmp al, 0
+    je .append_argument
+
+    inc si
+    jmp .argument_loop
+
+.append_argument:
+    cmp word [argc], arguments_buffer_capacity
+    je .arguments_buffer_overflow
+
+    push si
+
+    mov ax, [argc]
+    mov cx, 2
+    mul cx
+
+    mov si, argv
+    add si, ax
+
+    mov [si], di
+
+    inc word [argc]
+
+    pop si
+
+    cmp byte [si], 0
+    je .done
+
+    mov byte [si], 0
+
+
+    mov di, si
+
+
+.skip_extra_spaces:
+    inc si
+    inc di
+
+    cmp byte [si], " "
+    je .skip_extra_spaces
+
+    jmp .argument_loop
+
+.arguments_buffer_overflow:
+    mov si, arguments_overflow_string
+    call print_string
+
+    jmp input
+
+.done:
+    ret
+
 run_command:
+    mov si, [argv]
+
     ;; ========================================================
     ;; Check 'help' command
     ;; ========================================================
-    mov si, input_string
     mov di, help_command
     call string_equal
     cmp ax, 1
@@ -124,7 +192,6 @@ run_command:
     ;; ========================================================
     ;; Check 'reboot' command
     ;; ========================================================
-    mov si, input_string
     mov di, reboot_command
     call string_equal
     cmp ax, 1
@@ -133,7 +200,6 @@ run_command:
     ;; ========================================================
     ;; Check 'clear' command
     ;; ========================================================
-    mov si, input_string
     mov di, clear_command
     call string_equal
     cmp ax, 1
@@ -142,7 +208,6 @@ run_command:
     ;; ========================================================
     ;; Check 'dir' command
     ;; ========================================================
-    mov si, input_string
     mov di, dir_command
     call string_equal
     cmp ax, 1
@@ -151,7 +216,6 @@ run_command:
     ;; ========================================================
     ;; Check 'disk' command
     ;; ========================================================
-    mov si, input_string
     mov di, disk_command
     call string_equal
     cmp ax, 1
@@ -565,10 +629,18 @@ header:
 input_indicator:
     db "> ", 0
 
-input_string: rb input_string_buffer_size
+input_string: rb input_string_buffer_capacity
 
 input_overflow_string:
     db "Input string overflow.", 0xd, 0xa, 0
+
+argc:
+    rw 1
+argv:
+    rw arguments_buffer_capacity
+
+arguments_overflow_string:
+    db "Arguments overflow.", 0xd, 0xa, 0
 
 command_not_found_string_begin:
     db "Command '", 0
