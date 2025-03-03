@@ -546,8 +546,8 @@ help_command_output:
     db " - help                   -- show all available commands", 0xd, 0xa
     db " - clear                  -- clear entire screen", 0xd, 0xa
     db " - dir                    -- list root dir", 0xd, 0xa
-    db " - disk                   -- show information about the disk", 0xd, 0xa
-    db " - reboot                 -- reboot pc", 0xd, 0xa, 0xd, 0xa, 0
+    db " - disk                   -- show disk information", 0xd, 0xa
+    db " - reboot                 -- reboot operating system", 0xd, 0xa, 0xd, 0xa, 0
 
 reboot_command:
     db "reboot", 0
