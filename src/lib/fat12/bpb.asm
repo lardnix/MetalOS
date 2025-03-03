@@ -2,7 +2,7 @@
 
 BPB_ORM_label_offset                  = 0x03
 BPB_sector_size_offset                = 0x0b
-BPB_sectors_per_cluster_offset        = 0xd
+BPB_sectors_per_cluster_offset        = 0x0d
 BPB_reserved_sectors_offset           = 0x0e
 BPB_number_of_fats_offset             = 0x10
 BPB_number_of_root_dir_entries_offset = 0x11
