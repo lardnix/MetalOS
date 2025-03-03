@@ -270,11 +270,6 @@ command_echo:
     jmp .print_loop
 
 .done:
-    mov al, 0xd
-    call print_char
-
-    mov al, 0xa
-    call print_char                               ;; put new line
 
     jmp input
 
@@ -323,24 +318,12 @@ command_dir:
 
     call print_entry                        ;; print entry of file
 
-    mov al, 0xd
-    call print_char
-
-    mov al, 0xa
-    call print_char                               ;; put new line
-
     add bx, root_entry_size                 ;; add root entry size in bx to point to the next entry
     loop .file_loop                         ;; loop
 
 .done:
     pop bx
     pop es                                  ;; restore current es:bx
-
-    mov al, 0xd
-    call print_char
-
-    mov al, 0xa
-    call print_char                               ;; put new line
 
     jmp input                               ;; process next input
 
@@ -364,6 +347,12 @@ print_entry:
     call print_char
 
     call print_file_size
+
+    mov al, 0xd
+    call print_char
+
+    mov al, 0xa
+    call print_char                               ;; put new line
 
     ret
 
@@ -617,12 +606,6 @@ command_disk:
     mov si, command_disk_bytes_string
     call print_string
 
-    mov al, 0xd
-    call print_char
-
-    mov al, 0xa
-    call print_char                               ;; put new line
-
     pop cx
     pop bx
     pop es
@@ -670,10 +653,10 @@ include "lib/string_equal.asm"
 
 header:
     db "Welcome to OS", 0xd, 0xa, 0xd, 0xa
-    db "type 'help' to list commands", 0xd, 0xa, 0xd, 0xa, 0
+    db "type 'help' to list commands", 0xd, 0xa, 0
 
 input_indicator:
-    db "> ", 0
+    db 0xd, 0xa, "> ", 0
 
 input_string: rb input_string_buffer_capacity
 
@@ -692,12 +675,12 @@ command_not_found_string_begin:
     db "Command '", 0
 command_not_found_string_end:
     db "' not found :(", 0xd, 0xa, 0xd, 0xa
-    db "Type 'help' to see command list", 0xd, 0xa, 0xd, 0xa, 0
+    db "Type 'help' to see command list", 0xd, 0xa, 0
 
 command_not_implemented_string_begin:
     db "Command '", 0
 command_not_implemented_string_end:
-    db "' is not implemented yet :(", 0xd, 0xa, 0xd, 0xa, 0
+    db "' is not implemented yet :(", 0xd, 0xa, 0
 
 help_command:
     db "help", 0
@@ -707,7 +690,7 @@ help_command_output:
     db " - clear                  -- clear entire screen", 0xd, 0xa
     db " - dir                    -- list root dir", 0xd, 0xa
     db " - disk                   -- show disk information", 0xd, 0xa
-    db " - reboot                 -- reboot operating system", 0xd, 0xa, 0xd, 0xa, 0
+    db " - reboot                 -- reboot operating system", 0xd, 0xa, 0
 
 reboot_command:
     db "reboot", 0
