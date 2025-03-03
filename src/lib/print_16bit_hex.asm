@@ -1,10 +1,10 @@
 ;; ========================================================
-;; Prints hexdecimal in dx register
+;; Prints 16 bits hexdecimal value in dx register
 ;; ========================================================
-;; for now it expect puts included in assembly file
+;; it expect print_string included in assembly file
 
 ;; dx = hexecimal value
-puth:
+print_16bit_hex:
     pusha                    ;; push all general registers
     mov cx, 0                ;; initialize cx loop counter
 .loop:
@@ -29,7 +29,7 @@ puth:
     jmp .loop
 .end:
     mov si, .string
-    call puts
+    call print_string
     popa                     ;; restore all general registers
     ret
 

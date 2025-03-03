@@ -4,7 +4,7 @@
 
 ;; si = pointer to first string
 ;; di = pointer to second string
-str_equal:
+string_equal:
     push si
     push di
 

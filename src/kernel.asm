@@ -17,7 +17,7 @@ main:
     ;; Show header
     ;; ========================================================
     mov si, header
-    call puts
+    call print_string
 
     ;; ========================================================
     ;; Emulate a basic shell
@@ -27,7 +27,7 @@ input:
     ;; Show input indicator
     ;; ========================================================
     mov si, input_indicator
-    call puts
+    call print_string
 
     mov di, command_string                  ;; set di to command_string buffer
 .key_loop:
@@ -46,7 +46,7 @@ input:
     mov [di], al                            ;; append character in command buffer
     inc di                                  ;; increment di for next character
 
-    call putc
+    call print_char
 
     jmp .key_loop
 
@@ -58,21 +58,21 @@ input:
     mov BYTE [di], 0                        ;; make null terminated
 
     mov al, 0x8
-    call putc                               ;; move cursor left
+    call print_char                               ;; move cursor left
 
     mov al, " "
-    call putc                               ;; put space
+    call print_char                               ;; put space
 
     mov al, 0x8
-    call putc                               ;; move cursor left again
+    call print_char                               ;; move cursor left again
 
     jmp .key_loop                           ;; loop
 
 run_command:
     mov al, 0xd                             ;; print carriage return
-    call putc
+    call print_char
     mov al, 0xa                             ;; print new line
-    call putc
+    call print_char
 
     mov BYTE [di], 0                        ;; make command null terminated
 
@@ -81,7 +81,7 @@ run_command:
     ;; ========================================================
     mov si, command_string
     mov di, help_command
-    call str_equal
+    call string_equal
     cmp ax, 1
     je command_help
 
@@ -90,7 +90,7 @@ run_command:
     ;; ========================================================
     mov si, command_string
     mov di, reboot_command
-    call str_equal
+    call string_equal
     cmp ax, 1
     je command_reboot
 
@@ -99,7 +99,7 @@ run_command:
     ;; ========================================================
     mov si, command_string
     mov di, clear_command
-    call str_equal
+    call string_equal
     cmp ax, 1
     je command_clear
 
@@ -108,7 +108,7 @@ run_command:
     ;; ========================================================
     mov si, command_string
     mov di, dir_command
-    call str_equal
+    call string_equal
     cmp ax, 1
     je command_dir
 
@@ -117,7 +117,7 @@ run_command:
     ;; ========================================================
     mov si, command_string
     mov di, disk_command
-    call str_equal
+    call string_equal
     cmp ax, 1
     je command_disk
 
@@ -128,7 +128,7 @@ run_command:
 ;; ========================================================
 command_help:
     mov si, help_command_output
-    call puts
+    call print_string
 
     jmp input
 
@@ -155,7 +155,7 @@ command_clear:
 ;; ========================================================
 command_dir:
     mov si, dir_command_label
-    call puts                               ;; print label of dir command
+    call print_string                               ;; print label of dir command
 
     push es
     push bx                                 ;; save current es:bx
@@ -178,10 +178,10 @@ command_dir:
     call print_entry                        ;; print entry of file
 
     mov al, 0xd
-    call putc
+    call print_char
 
     mov al, 0xa
-    call putc                               ;; put new line
+    call print_char                               ;; put new line
 
     add bx, root_entry_size                 ;; add root entry size in bx to point to the next entry
     loop .file_loop                         ;; loop
@@ -191,10 +191,10 @@ command_dir:
     pop es                                  ;; restore current es:bx
 
     mov al, 0xd
-    call putc
+    call print_char
 
     mov al, 0xa
-    call putc                               ;; put new line
+    call print_char                               ;; put new line
 
     jmp input                               ;; process next input
 
@@ -206,16 +206,16 @@ print_entry:
     call print_file_name
 
     mov al, " "
-    call putc
+    call print_char
     mov al, " "
-    call putc
+    call print_char
 
     call print_file_extension
 
     mov al, " "
-    call putc
+    call print_char
     mov al, " "
-    call putc
+    call print_char
 
     call print_file_size
 
@@ -232,7 +232,7 @@ print_file_name:
     xor si, si
 .print_loop:
     mov al, [es:bx + si]
-    call putc
+    call print_char
 
     add si, 1
     loop .print_loop
@@ -252,7 +252,7 @@ print_file_extension:
     mov si, 8
 .print_loop:
     mov al, [es:bx + si]
-    call putc
+    call print_char
 
     add si, 1
     loop .print_loop
@@ -274,7 +274,7 @@ print_file_size:
     call print_32bit_decimal
     
     mov si, print_file_size_string
-    call puts
+    call print_string
 
     pop cx
     ret
@@ -433,11 +433,11 @@ command_disk:
     ;; ========================================================
 
     mov si, disk_command_label
-    call puts
+    call print_string
 
     ;; Print total size
     mov si, command_disk_total_string
-    call puts
+    call print_string
 
     mov dx, [command_disk_total_size + 2]
     mov ax, [command_disk_total_size]
@@ -445,11 +445,11 @@ command_disk:
     call print_32bit_decimal
 
     mov si, command_disk_bytes_string
-    call puts
+    call print_string
 
     ;; Print used size
     mov si, command_disk_used_string
-    call puts
+    call print_string
 
     mov dx, [command_disk_used_size + 2]
     mov ax, [command_disk_used_size]
@@ -457,11 +457,11 @@ command_disk:
     call print_32bit_decimal
 
     mov si, command_disk_bytes_string
-    call puts
+    call print_string
 
     ;; Print free size
     mov si, command_disk_free_string
-    call puts
+    call print_string
 
     mov dx, [command_disk_free_size + 2]
     mov ax, [command_disk_free_size]
@@ -469,13 +469,13 @@ command_disk:
     call print_32bit_decimal
 
     mov si, command_disk_bytes_string
-    call puts
+    call print_string
 
     mov al, 0xd
-    call putc
+    call print_char
 
     mov al, 0xa
-    call putc                               ;; put new line
+    call print_char                               ;; put new line
 
     pop cx
     pop bx
@@ -502,13 +502,13 @@ command_disk_bytes_string: db " bytes", 0xd, 0xa, 0
 ;; ========================================================
 command_not_found:
     mov si, command_not_found_string_begin
-    call puts
+    call print_string
 
     mov si, command_string
-    call puts
+    call print_string
     
     mov si, command_not_found_string_end
-    call puts
+    call print_string
 
     jmp input
 
@@ -516,11 +516,11 @@ end_program:
     cli
     hlt
 
-include "lib/putc.asm"
-include "lib/puts.asm"
-include "lib/puth.asm"
+include "lib/print_char.asm"
+include "lib/print_string.asm"
+include "lib/print_16bit_hex.asm"
 include "lib/print_32bit_decimal.asm"
-include "lib/str_equal.asm"
+include "lib/string_equal.asm"
 
 header:
     db "Welcome to OS", 0xd, 0xa, 0xd, 0xa

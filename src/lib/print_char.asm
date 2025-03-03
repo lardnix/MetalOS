@@ -3,7 +3,7 @@
 ;; ========================================================
 
 ;; al = character | ascii character to write
-putc:
+print_char:
     mov ah, 0xe              ;; ah = 0eh | write text in tty mode
     int 0x10                 ;; print character in al
     ret

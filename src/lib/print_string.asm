@@ -1,10 +1,11 @@
 ;; ========================================================
 ;; Prints null terminated string in si register
 ;; ========================================================
+;; it expect print_char included in assembly file
 
 ;; si = string pointer
-puts:
-    push si
+print_string:
+    pusha
 .print_char:
     lodsb                    ;; load ds:si in al and increment si
     cmp al, 0x0
@@ -13,5 +14,5 @@ puts:
     int 0x10                 ;; print character in al
     jmp .print_char          ;; loop
 .end:
-    pop si
+    popa
     ret

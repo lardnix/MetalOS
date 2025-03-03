@@ -158,7 +158,7 @@ boot:
 
 .kernel_loaded:
     mov si, kernel_loaded_string
-    call puts
+    call print_string
 
     mov bx, kernel_segment
     mov es, bx
@@ -210,18 +210,18 @@ read_disk:
     ret
 .error:
     mov si, disk_error_string
-    call puts
+    call print_string
 
     mov dh, 0
     mov dl, ah
-    call puth
+    call print_16bit_hex
 
     cli
     hlt
 
-include "lib/putc.asm"
-include "lib/puts.asm"
-include "lib/puth.asm"
+include "lib/print_char.asm"
+include "lib/print_string.asm"
+include "lib/print_16bit_hex.asm"
 
 kernel_loaded_string: db "Kernel loaded successfully...", 0
 disk_error_string: db "Can't read disk... status: ", 0
