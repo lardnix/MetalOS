@@ -332,6 +332,13 @@ command_dir:
 ;; Print file entry for dir command
 ;; ========================================================
 print_entry:
+    call print_file_created_at
+
+    mov al, " "
+    call print_char
+    mov al, " "
+    call print_char
+
     call print_file_name
 
     mov al, " "
@@ -346,6 +353,13 @@ print_entry:
     mov al, " "
     call print_char
 
+    call print_file_attr
+
+    mov al, " "
+    call print_char
+    mov al, " "
+    call print_char
+
     call print_file_size
 
     mov al, 0xd
@@ -354,6 +368,115 @@ print_entry:
     mov al, 0xa
     call print_char                               ;; put new line
 
+    ret
+
+;; ========================================================
+;; Print file created at of root entry in es:bx
+;; ========================================================
+print_file_created_at:
+    mov ax, [es:bx + 0xe]
+    shr ax, 11
+    and ax, 11111b
+    cmp ax, 10
+    jae .print_hour
+
+    push ax
+    mov al, "0"
+    call print_char
+    pop ax
+
+.print_hour:
+    mov dx, ax
+    call print_decimal
+
+    mov al, ":"
+    call print_char
+
+    mov ax, [es:bx + 0xe]
+    shr ax, 5
+    and ax, 111111b
+    cmp ax, 10
+    jae .print_min
+
+    push ax
+    mov al, "0"
+    call print_char
+    pop ax
+
+.print_min:
+    mov dx, ax
+    call print_decimal
+
+    mov al, ":"
+    call print_char
+
+    mov ax, [es:bx + 0xe]
+    and ax, 11111b
+    cmp ax, 10
+    jae .print_sec
+
+    push ax
+    mov al, "0"
+    call print_char
+    pop ax
+
+.print_sec:
+    mov dx, ax
+    call print_decimal
+
+    mov al, " "
+    call print_char
+
+    mov ax, [es:bx + 0x10]
+    shr ax, 9
+    and ax, 1111111b
+    add ax, 1980
+    mov dx, ax
+    call print_decimal
+
+    mov al, "/"
+    call print_char
+
+    mov ax, [es:bx + 0x10]
+    shr ax, 5
+    and ax, 1111b
+    cmp ax, 10
+    jae .print_month
+
+    push ax
+    mov al, "0"
+    call print_char
+    pop ax
+
+.print_month:
+    mov dx, ax
+    call print_decimal
+
+    mov al, "/"
+    call print_char
+
+    mov ax, [es:bx + 0x10]
+    and ax, 11111b
+    cmp ax, 10
+    jae .print_day
+
+    push ax
+    mov al, "0"
+    call print_char
+    pop ax
+
+.print_day:
+    mov dx, ax
+    call print_decimal
+
+    ret
+
+;; ========================================================
+;; Print file attributes of root entry in es:bx
+;; ========================================================
+print_file_attr:
+    mov dx, [es:bx + 0x0b]
+    call print_hex
     ret
 
 ;; ========================================================
@@ -703,8 +826,9 @@ dir_command:
     db "dir", 0
 
 dir_command_label:
-    db "Name      Ext  Size", 0xd, 0xa
-    db "----      ---  ----", 0xd, 0xa, 0xd, 0xa, 0
+    db "Created At           Name      Ext  Attr    Size", 0xd, 0xa
+    db "-------------------  --------- ---  ------- ----", 0xd, 0xa, 0xd, 0xa
+    db "hh:mm:ss yyyy:mm:dd", 0xd, 0xa, 0xd, 0xa, 0xd, 0xa, 0
 
 disk_command:
     db "disk", 0
