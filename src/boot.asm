@@ -214,14 +214,14 @@ read_disk:
 
     mov dh, 0
     mov dl, ah
-    call print_16bit_hex
+    call print_hex
 
     cli
     hlt
 
 include "lib/print_char.asm"
 include "lib/print_string.asm"
-include "lib/print_16bit_hex.asm"
+include "lib/print_hex.asm"
 
 kernel_loaded_string: db "Kernel loaded successfully...", 0
 disk_error_string: db "Can't read disk... status: ", 0

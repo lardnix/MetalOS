@@ -4,7 +4,7 @@
 ;; it expect print_string included in assembly file
 
 ;; dx = hexecimal value
-print_16bit_hex:
+print_hex:
     pusha                    ;; push all general registers
     mov cx, 0                ;; initialize cx loop counter
 .loop:

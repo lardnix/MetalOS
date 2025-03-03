@@ -647,7 +647,7 @@ end_program:
 
 include "lib/print_char.asm"
 include "lib/print_string.asm"
-include "lib/print_16bit_hex.asm"
+include "lib/print_hex.asm"
 include "lib/print_32bit_decimal.asm"
 include "lib/string_equal.asm"
 
