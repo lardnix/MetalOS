@@ -43,10 +43,11 @@ $ qemu-system-i386 -drive format=raw,file=build/os.img,index=0,if=floppy -boot o
 
 List of all supported commands.
 
-| Name   | Description                 |
-| ------ | --------------------------- |
-| help   | show all available commands |
-| clear  | clear entire screen         |
-| dir    | list root directory         |
-| disk   | show disk information       |
-| reboot | reoot operating system      |
+| Name   | Description                        |
+| ------ | ---------------------------------- |
+| help   | show all available commands        |
+| echo   | print it's arguments on the screen |
+| clear  | clear entire screen                |
+| dir    | list root directory                |
+| disk   | show disk information              |
+| reboot | reoot operating system             |

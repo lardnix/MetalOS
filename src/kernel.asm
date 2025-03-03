@@ -190,6 +190,14 @@ run_command:
     je command_help
 
     ;; ========================================================
+    ;; Check 'echo' command
+    ;; ========================================================
+    mov di, echo_command
+    call string_equal
+    cmp ax, 1
+    je command_echo
+
+    ;; ========================================================
     ;; Check 'reboot' command
     ;; ========================================================
     mov di, reboot_command
@@ -229,6 +237,44 @@ run_command:
 command_help:
     mov si, help_command_output
     call print_string
+
+    jmp input
+
+;; ========================================================
+;; Execute command echo
+;; ========================================================
+command_echo:
+
+    mov ax, 1
+.print_loop:
+    cmp ax, [argc]
+    jae .done
+
+    push ax
+
+    mov cx, 2
+    mul cx
+
+    mov di, argv
+    add di, ax
+
+    mov si, [di]
+    call print_string
+
+    mov al, " "
+    call print_char
+
+    pop ax
+    inc ax
+
+    jmp .print_loop
+
+.done:
+    mov al, 0xd
+    call print_char
+
+    mov al, 0xa
+    call print_char                               ;; put new line
 
     jmp input
 
@@ -657,6 +703,7 @@ help_command:
     db "help", 0
 help_command_output:
     db " - help                   -- show all available commands", 0xd, 0xa
+    db " - echo                   -- print it's arguments on the screen", 0xd, 0xa
     db " - clear                  -- clear entire screen", 0xd, 0xa
     db " - dir                    -- list root dir", 0xd, 0xa
     db " - disk                   -- show disk information", 0xd, 0xa
@@ -680,4 +727,7 @@ disk_command:
 disk_command_label:
     db "Disk info", 0xd, 0xa
     db "----------", 0xd, 0xa, 0xd, 0xa, 0
+
+echo_command:
+    db "echo", 0
 
