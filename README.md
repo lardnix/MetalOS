@@ -48,4 +48,5 @@ List of all supported commands.
 | help   | show all available commands |
 | clear  | clear entire screen         |
 | dir    | list root directory         |
+| disk   | show disk information       |
 | reboot | reoot operating system      |
