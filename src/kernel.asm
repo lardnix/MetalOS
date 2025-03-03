@@ -5,6 +5,8 @@ include "memory_layout.asm"
 include "lib/fat12/bpb.asm"
 include "lib/fat12/root_entry.asm"
 
+input_string_buffer_size = 100
+
 main:
     ;; ========================================================
     ;; Setup tty mode 80x25
@@ -29,57 +31,91 @@ input:
     mov si, input_indicator
     call print_string
 
-    mov di, command_string                  ;; set di to command_string buffer
+    call get_input_string
+
+    jmp run_command
+
+    cli
+    hlt
+
+;; ========================================================
+;; Stores input string in input_string_buffer
+;; ========================================================
+get_input_string:
+    mov di, input_string                    ;; set di to input_string buffer
 .key_loop:
     mov ax, 0
     int 0x16                                ;; wait for keystroke and read
 
-    cmp al, 0x0d                            ;; check for 'enter'
-    je run_command
-
     cmp al, 0x08                            ;; check of 'backspace'
     je .handle_backspace
 
-    cmp di, command_string + 100            ;; check for buffer oveflow
-    je run_command
+    cmp di, input_string + input_string_buffer_size - 1 ;; check for buffer oveflow
+    je .overflow
+
+    cmp al, 0x0d                            ;; check for 'enter'
+    je .done
 
     mov [di], al                            ;; append character in command buffer
     inc di                                  ;; increment di for next character
 
-    call print_char
+    call print_char                         ;; print input character
 
-    jmp .key_loop
+    jmp .key_loop                           ;; loop
 
 .handle_backspace:
-    cmp di, command_string                  ;; if command_string is empty, do nothing
+    cmp di, input_string                    ;; if input_string is empty, do nothing
     je .key_loop
 
     dec di                                  ;; decrement command string pointer
     mov BYTE [di], 0                        ;; make null terminated
 
     mov al, 0x8
-    call print_char                               ;; move cursor left
+    call print_char                         ;; move cursor left
 
     mov al, " "
-    call print_char                               ;; put space
+    call print_char                         ;; print space
 
     mov al, 0x8
-    call print_char                               ;; move cursor left again
+    call print_char                         ;; move cursor left again
 
     jmp .key_loop                           ;; loop
 
-run_command:
+.overflow:
+    mov BYTE [di], 0                        ;; make command null terminated
+
+    mov al, 0xd                             ;; print carriage return
+    call print_char
+    mov al, 0xa                             ;; print new line
+    call print_char
+
+    mov si, input_overflow_string
+    call print_string
+
+    ;; keep state of input
+
+    mov si, input_indicator
+    call print_string
+
+    mov si, input_string
+    call print_string
+
+    jmp .key_loop
+
+.done:
     mov al, 0xd                             ;; print carriage return
     call print_char
     mov al, 0xa                             ;; print new line
     call print_char
 
     mov BYTE [di], 0                        ;; make command null terminated
+    ret
 
+run_command:
     ;; ========================================================
     ;; Check 'help' command
     ;; ========================================================
-    mov si, command_string
+    mov si, input_string
     mov di, help_command
     call string_equal
     cmp ax, 1
@@ -88,7 +124,7 @@ run_command:
     ;; ========================================================
     ;; Check 'reboot' command
     ;; ========================================================
-    mov si, command_string
+    mov si, input_string
     mov di, reboot_command
     call string_equal
     cmp ax, 1
@@ -97,7 +133,7 @@ run_command:
     ;; ========================================================
     ;; Check 'clear' command
     ;; ========================================================
-    mov si, command_string
+    mov si, input_string
     mov di, clear_command
     call string_equal
     cmp ax, 1
@@ -106,7 +142,7 @@ run_command:
     ;; ========================================================
     ;; Check 'dir' command
     ;; ========================================================
-    mov si, command_string
+    mov si, input_string
     mov di, dir_command
     call string_equal
     cmp ax, 1
@@ -115,7 +151,7 @@ run_command:
     ;; ========================================================
     ;; Check 'disk' command
     ;; ========================================================
-    mov si, command_string
+    mov si, input_string
     mov di, disk_command
     call string_equal
     cmp ax, 1
@@ -504,7 +540,7 @@ command_not_found:
     mov si, command_not_found_string_begin
     call print_string
 
-    mov si, command_string
+    mov si, input_string
     call print_string
     
     mov si, command_not_found_string_end
@@ -528,6 +564,11 @@ header:
 
 input_indicator:
     db "> ", 0
+
+input_string: rb input_string_buffer_size
+
+input_overflow_string:
+    db "Input string overflow.", 0xd, 0xa, 0
 
 command_not_found_string_begin:
     db "Command '", 0
@@ -568,5 +609,3 @@ disk_command_label:
     db "Disk info", 0xd, 0xa
     db "----------", 0xd, 0xa, 0xd, 0xa, 0
 
-command_string:
-    times 100 db 0
