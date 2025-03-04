@@ -2,7 +2,7 @@
 # MetalOS
 
 > [!WARNING]
-> This project is not finished yet
+> This project is not finished yet and is only for study purpose, do not use this operating system in produciton.
 
 A tiny a kernel bare metal based operating system. It runs in 16 bits real mode in a floppy disk with 1.44mb.
 
