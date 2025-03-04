@@ -8,6 +8,8 @@ cluster_to_lba:
     push es
     push bx
 
+    push ax
+
     ;; Move es:bx to point at boot segment
     mov bx, boot_segment
     mov es, bx
@@ -37,10 +39,12 @@ cluster_to_lba:
 
     mov [ctb_root_size], ax
 
+    pop ax
+
     ;; ========================================================
     ;; Calculate LBA
     ;; ========================================================
-    ;; LBA = (cluster - 2) + sectors_per_cluster + root_start_lba + root_size
+    ;; LBA = (cluster - 2) * sectors_per_cluster + root_start_lba + root_size
     sub ax, 2
     xor cx, cx
     mov cl, [es:bx + BPB_sectors_per_cluster_offset]
@@ -54,4 +58,4 @@ cluster_to_lba:
     ret
 
 ctb_root_lba: rw 1
-ctb_root_size: rb 1
+ctb_root_size: rw 1

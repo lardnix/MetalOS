@@ -198,6 +198,14 @@ run_command:
     je command_echo
 
     ;; ========================================================
+    ;; Check 'view' command
+    ;; ========================================================
+    mov di, view_command
+    call string_equal
+    cmp ax, 1
+    je command_view
+
+    ;; ========================================================
     ;; Check 'reboot' command
     ;; ========================================================
     mov di, reboot_command
@@ -290,6 +298,125 @@ command_clear:
     int 10h
 
     jmp input
+
+;; ========================================================
+;; Execute command view
+;; ========================================================
+command_view:
+    cmp word [argc], 3
+    jb .not_enugh_arguments
+
+    call command_view_clean_filename
+
+    call command_view_copy_filename
+    call command_view_copy_file_extension
+
+    push es
+    push bx
+
+    mov si, view_command_file
+    call find_file
+    jc .file_not_found
+
+    ;; only print the first 65535 bytes of the file
+    mov cx, [es:bx + root_entry_file_size_offset]
+
+    call load_file
+
+.print_loop:
+    mov ah, 0xe
+    mov al, [es:bx]
+    int 0x10
+
+    inc bx
+    loop .print_loop
+
+    pop bx
+    pop es
+
+    jmp input
+
+.not_enugh_arguments:
+    mov si, view_command_help_string
+    call print_string
+
+    jmp input
+
+.file_not_found:
+    pop bx
+    pop es
+
+    mov si, view_command_file_not_found_begin
+    call print_string
+
+    mov si, view_command_file
+    call print_string
+
+    mov si, view_command_file_not_found_end
+    call print_string
+
+    jmp input
+
+command_view_clean_filename:
+    mov cx, 11
+    mov di, view_command_file
+.loop:
+    mov byte [di], " "
+    inc di
+    loop .loop
+
+    ret
+
+command_view_copy_filename:
+    mov ax, 1
+    mov cx, 2
+    mul cx
+
+    mov si, argv
+    add si, ax
+    mov si, [si]
+
+    mov di, view_command_file
+
+.copy_loop:
+    mov al, [si]
+    test al, al
+    jz .done
+
+    lodsb
+    stosb
+
+    jmp .copy_loop
+
+.done:
+    ret
+
+command_view_copy_file_extension:
+    mov ax, 2
+    mov cx, 2
+    mul cx
+
+    mov si, argv
+    add si, ax
+    mov si, [si]
+
+    mov di, view_command_file
+    add di, 8
+
+.copy_loop:
+    mov al, [si]
+    test al, al
+    jz .done
+
+    lodsb
+    stosb
+
+    jmp .copy_loop
+
+.done:
+    ret
+
+view_command_file: db "           ", 0
 
 ;; ========================================================
 ;; Execute command dir
@@ -768,6 +895,14 @@ end_program:
     cli
     hlt
 
+include "lib/read_disk.asm"
+
+include "lib/fat12/lba_to_chs.asm"
+include "lib/fat12/cluster_to_lba.asm"
+include "lib/fat12/get_next_cluster.asm"
+include "lib/fat12/find_file.asm"
+include "lib/fat12/load_file.asm"
+
 include "lib/print_char.asm"
 include "lib/print_string.asm"
 include "lib/print_hex.asm"
@@ -811,6 +946,7 @@ help_command:
 help_command_output:
     db " - help                   -- show all available commands", 0xd, 0xa
     db " - echo                   -- print it's arguments on the screen", 0xd, 0xa
+    db " - view                   -- show file content", 0xd, 0xa
     db " - clear                  -- clear entire screen", 0xd, 0xa
     db " - dir                    -- list root dir", 0xd, 0xa
     db " - disk                   -- show disk information", 0xd, 0xa
@@ -839,3 +975,14 @@ disk_command_label:
 echo_command:
     db "echo", 0
 
+view_command:
+    db "view", 0
+
+view_command_help_string:
+    db "[Usage]: view <file_name> <file_extension>", 0xd, 0xa, 0
+
+view_command_file_not_found_begin:
+    db "[ERROR]: File '", 0
+
+view_command_file_not_found_end:
+    db "' not found.", 0xd, 0xa, 0

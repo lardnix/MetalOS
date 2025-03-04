@@ -178,7 +178,7 @@ boot:
 ;; Calculate LBA(Logical Blocking Adressing) of a given cluster at ax and save it in ax register
 ;; ax = cluster
 cluster_to_lba:
-    ;; LBA = (cluster - 2) + sectors_per_cluster + root_start_lba + root_size
+    ;; LBA = (cluster - 2) * sectors_per_cluster + root_start_lba + root_size
     sub ax, 2
     xor cx, cx
     mov cl, [sectors_per_cluster]

@@ -15,7 +15,11 @@ $(OS): $(BIN) $(HD) $(BOOT) $(KERNEL)
 	dd if=$(BOOT) of=$(HD) bs=512 seek=0 conv=notrunc
 	mcopy -o -i $(HD) $(KERNEL) ::/kernel.bin
 
-	echo "Hello, World!" > test.txt
+	echo "Hello, World!" > hello.txt
+	mcopy -o -i $(HD) hello.txt ::/hello.txt
+	rm hello.txt
+
+	echo "Test for 'view' command" > test.txt
 	mcopy -o -i $(HD) test.txt ::/test.txt
 	rm test.txt
 

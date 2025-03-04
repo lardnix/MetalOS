@@ -11,3 +11,6 @@ root_offset    = 0x0000
 
 kernel_segment = 0x2000
 kernel_offset  = 0x0000
+
+loaded_file_segment   = 0x3000
+loaded_file_offset    = 0x0000
