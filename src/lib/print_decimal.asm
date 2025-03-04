@@ -49,6 +49,8 @@ print_decimal:
     mov ah, 0xe
     mov al, "0"
     int 0x10
+
+    popa
     ret
 
 print_hex_string: rb 10
