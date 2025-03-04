@@ -9,6 +9,11 @@ input_string_buffer_capacity = 100
 arguments_buffer_capacity = 100
 
 main:
+    cmp byte [initialized], 0
+    ja input
+
+    mov byte [initialized], 1
+
     ;; ========================================================
     ;; Setup tty mode 80x25
     ;; ========================================================
@@ -1024,6 +1029,9 @@ include "lib/print_hex.asm"
 include "lib/print_decimal.asm"
 include "lib/print_32bit_decimal.asm"
 include "lib/string_equal.asm"
+
+initialized:
+    rb 1
 
 header:
     db "Welcome to OS", 0xd, 0xa, 0xd, 0xa
