@@ -659,6 +659,9 @@ print_file_created_at:
 
     mov ax, [es:bx + 0xe]
     and ax, 11111b
+    mov cx, 2
+    mul cx
+
     cmp ax, 10
     jae .print_sec
 
