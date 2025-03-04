@@ -725,7 +725,8 @@ print_file_created_at:
 ;; Print file attributes of root entry in es:bx
 ;; ========================================================
 print_file_attr:
-    mov dx, [es:bx + 0x0b]
+    mov dh, 0
+    mov dl, [es:bx + 0x0b]
     call print_hex
     ret
 
