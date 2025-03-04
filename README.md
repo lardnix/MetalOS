@@ -48,6 +48,7 @@ List of all supported commands.
 | help   | show all available commands        |
 | echo   | print it's arguments on the screen |
 | view   | show file content                  |
+| run    | run program                        |
 | clear  | clear entire screen                |
 | dir    | list root directory                |
 | disk   | show disk information              |

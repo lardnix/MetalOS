@@ -206,6 +206,14 @@ run_command:
     je command_view
 
     ;; ========================================================
+    ;; Check 'run' command
+    ;; ========================================================
+    mov di, runn_command
+    call string_equal
+    cmp ax, 1
+    je command_run
+
+    ;; ========================================================
     ;; Check 'reboot' command
     ;; ========================================================
     mov di, reboot_command
@@ -299,6 +307,113 @@ command_clear:
 
     jmp input
 
+;; ========================================================
+;; Execute command run
+;; ========================================================
+command_run:
+    cmp word [argc], 3
+    jb .not_enugh_arguments
+
+    call command_run_clean_filename
+
+    call command_run_copy_filename
+    call command_run_copy_file_extension
+
+    mov si, run_command_file
+    call find_file
+    jc .file_not_found
+
+    call load_file
+
+    mov ax, loaded_file_segment             ;; move to ax the kernel segment
+
+    mov es, ax                              ;; setup es
+    mov ds, ax                              ;; setup ds
+    mov ss, ax                              ;; setup ss
+
+    jmp loaded_file_segment:loaded_file_offset ;; jump to kernel
+
+.not_enugh_arguments:
+    mov si, run_command_help_string
+    call print_string
+
+    jmp input
+
+.file_not_found:
+    pop bx
+    pop es
+
+    mov si, run_command_file_not_found_begin
+    call print_string
+
+    mov si, run_command_file
+    call print_string
+
+    mov si, run_command_file_not_found_end
+    call print_string
+
+    jmp input
+
+command_run_clean_filename:
+    mov cx, 11
+    mov di, run_command_file
+.loop:
+    mov byte [di], " "
+    inc di
+    loop .loop
+
+    ret
+
+command_run_copy_filename:
+    mov ax, 1
+    mov cx, 2
+    mul cx
+
+    mov si, argv
+    add si, ax
+    mov si, [si]
+
+    mov di, run_command_file
+
+.copy_loop:
+    mov al, [si]
+    test al, al
+    jz .done
+
+    lodsb
+    stosb
+
+    jmp .copy_loop
+
+.done:
+    ret
+
+command_run_copy_file_extension:
+    mov ax, 2
+    mov cx, 2
+    mul cx
+
+    mov si, argv
+    add si, ax
+    mov si, [si]
+
+    mov di, run_command_file
+    add di, 8
+
+.copy_loop:
+    mov al, [si]
+    test al, al
+    jz .done
+
+    lodsb
+    stosb
+
+    jmp .copy_loop
+
+.done:
+    ret
+
+run_command_file: db "           ", 0
 ;; ========================================================
 ;; Execute command view
 ;; ========================================================
@@ -947,6 +1062,7 @@ help_command_output:
     db " - help                   -- show all available commands", 0xd, 0xa
     db " - echo                   -- print it's arguments on the screen", 0xd, 0xa
     db " - view                   -- show file content", 0xd, 0xa
+    db " - run                    -- run program", 0xd, 0xa
     db " - clear                  -- clear entire screen", 0xd, 0xa
     db " - dir                    -- list root dir", 0xd, 0xa
     db " - disk                   -- show disk information", 0xd, 0xa
@@ -985,4 +1101,16 @@ view_command_file_not_found_begin:
     db "[ERROR]: File '", 0
 
 view_command_file_not_found_end:
+    db "' not found.", 0xd, 0xa, 0
+
+runn_command:
+    db "run", 0
+
+run_command_help_string:
+    db "[Usage]: run <file_name> <file_extension>", 0xd, 0xa, 0
+
+run_command_file_not_found_begin:
+    db "[ERROR]: File '", 0
+
+run_command_file_not_found_end:
     db "' not found.", 0xd, 0xa, 0

@@ -8,20 +8,19 @@ BIN=$(BUILD)/bin
 
 BOOT=$(BIN)/boot.bin
 KERNEL=$(BIN)/kernel.bin
+PROGRAM=$(BIN)/test.bin
 
 HD=$(BUILD)/os.img
 
-$(OS): $(BIN) $(HD) $(BOOT) $(KERNEL)
+$(OS): $(BIN) $(HD) $(BOOT) $(KERNEL) $(PROGRAM)
 	dd if=$(BOOT) of=$(HD) bs=512 seek=0 conv=notrunc
+
 	mcopy -o -i $(HD) $(KERNEL) ::/kernel.bin
+	mcopy -o -i $(HD) $(PROGRAM) ::/test.bin
 
 	echo "Hello, World!" > hello.txt
 	mcopy -o -i $(HD) hello.txt ::/hello.txt
 	rm hello.txt
-
-	echo "Test for 'view' command" > test.txt
-	mcopy -o -i $(HD) test.txt ::/test.txt
-	rm test.txt
 
 $(HD): $(BUILD)
 	dd if=/dev/zero of=$(HD) bs=512 count=2880
@@ -32,6 +31,9 @@ $(BOOT): $(BIN) $(SRC)/boot.asm
 
 $(KERNEL): $(BIN) $(SRC)/kernel.asm
 	fasm $(SRC)/kernel.asm $(KERNEL)
+
+$(PROGRAM): $(BIN) $(SRC)/programs/test.asm
+	fasm $(SRC)/programs/test.asm $(PROGRAM)
 
 $(BIN): $(BUILD)
 	mkdir -p $(BIN)
