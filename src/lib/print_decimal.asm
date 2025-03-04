@@ -7,6 +7,9 @@
 print_decimal:
     pusha
 
+    cmp dx, 0
+    je .zero
+
     mov di, print_hex_string_end
 
     mov ax, dx
@@ -40,6 +43,12 @@ print_decimal:
     loop .print
 
     popa
+    ret
+
+.zero:
+    mov ah, 0xe
+    mov al, "0"
+    int 0x10
     ret
 
 print_hex_string: rb 10
