@@ -44,7 +44,7 @@ List of all supported commands.
 | Name   | Description                        |
 | ------ | ---------------------------------- |
 | help   | show all available commands        |
-| cd     | change dierctory                   |
+| cd     | change directory                   |
 | echo   | print it's arguments on the screen |
 | view   | show file content                  |
 | run    | run program                        |
