@@ -37,7 +37,7 @@ input:
     call get_input_string
     call parse_input_string
 
-    jmp run_command
+    jmp handle_command
 
     jmp input
 
@@ -183,13 +183,13 @@ parse_input_string:
 .done:
     ret
 
-run_command:
+handle_command:
     mov si, [argv]
 
     ;; ========================================================
     ;; Check 'help' command
     ;; ========================================================
-    mov di, help_command
+    mov di, command_help_name
     call string_equal
     cmp ax, 1
     je command_help
@@ -197,7 +197,7 @@ run_command:
     ;; ========================================================
     ;; Check 'echo' command
     ;; ========================================================
-    mov di, echo_command
+    mov di, command_echo_name
     call string_equal
     cmp ax, 1
     je command_echo
@@ -205,7 +205,7 @@ run_command:
     ;; ========================================================
     ;; Check 'view' command
     ;; ========================================================
-    mov di, view_command
+    mov di, command_view_name
     call string_equal
     cmp ax, 1
     je command_view
@@ -213,7 +213,7 @@ run_command:
     ;; ========================================================
     ;; Check 'run' command
     ;; ========================================================
-    mov di, runn_command
+    mov di, command_run_name
     call string_equal
     cmp ax, 1
     je command_run
@@ -221,7 +221,7 @@ run_command:
     ;; ========================================================
     ;; Check 'reboot' command
     ;; ========================================================
-    mov di, reboot_command
+    mov di, command_reboot_name
     call string_equal
     cmp ax, 1
     je command_reboot
@@ -229,7 +229,7 @@ run_command:
     ;; ========================================================
     ;; Check 'clear' command
     ;; ========================================================
-    mov di, clear_command
+    mov di, command_clear_name
     call string_equal
     cmp ax, 1
     je command_clear
@@ -237,7 +237,7 @@ run_command:
     ;; ========================================================
     ;; Check 'dir' command
     ;; ========================================================
-    mov di, dir_command
+    mov di, command_dir_name
     call string_equal
     cmp ax, 1
     je command_dir
@@ -245,760 +245,22 @@ run_command:
     ;; ========================================================
     ;; Check 'disk' command
     ;; ========================================================
-    mov di, disk_command
+    mov di, command_disk_name
     call string_equal
     cmp ax, 1
     je command_disk
 
     jmp command_not_found                   ;; command not found
 
-;; ========================================================
-;; Execute command help
-;; ========================================================
-command_help:
-    mov si, help_command_output
-    call print_string
+include "commands/help.asm"
+include "commands/echo.asm"
+include "commands/reboot.asm"
+include "commands/clear.asm"
+include "commands/run.asm"
+include "commands/view.asm"
+include "commands/dir.asm"
+include "commands/disk.asm"
 
-    jmp input
-
-;; ========================================================
-;; Execute command echo
-;; ========================================================
-command_echo:
-
-    mov ax, 1
-.print_loop:
-    cmp ax, [argc]
-    jae .done
-
-    push ax
-
-    mov cx, 2
-    mul cx
-
-    mov di, argv
-    add di, ax
-
-    mov si, [di]
-    call print_string
-
-    mov al, " "
-    call print_char
-
-    pop ax
-    inc ax
-
-    jmp .print_loop
-
-.done:
-
-    jmp input
-
-;; ========================================================
-;; Execute command reboot
-;; ========================================================
-command_reboot:
-    jmp 0xffff:0x0
-
-;; ========================================================
-;; Execute command clear
-;; ========================================================
-command_clear:
-    ;; This clear entire
-    ;; Setup tty mode 80x25
-    mov ah, 0x0                             ;; ah = 0   | set video mode
-    mov al, 0x3                             ;; al = 03h | 80x25 color text 
-    int 10h
-
-    jmp input
-
-;; ========================================================
-;; Execute command run
-;; ========================================================
-command_run:
-    cmp word [argc], 3
-    jb .not_enugh_arguments
-
-    call command_run_clean_filename
-
-    call command_run_copy_filename
-    call command_run_copy_file_extension
-
-    mov si, run_command_file
-    call find_file
-    jc .file_not_found
-
-    call load_file
-
-    mov ax, loaded_file_segment             ;; move to ax the kernel segment
-
-    mov es, ax                              ;; setup es
-    mov ds, ax                              ;; setup ds
-    mov ss, ax                              ;; setup ss
-
-    jmp loaded_file_segment:loaded_file_offset ;; jump to kernel
-
-.not_enugh_arguments:
-    mov si, run_command_help_string
-    call print_string
-
-    jmp input
-
-.file_not_found:
-    pop bx
-    pop es
-
-    mov si, run_command_file_not_found_begin
-    call print_string
-
-    mov si, run_command_file
-    call print_string
-
-    mov si, run_command_file_not_found_end
-    call print_string
-
-    jmp input
-
-command_run_clean_filename:
-    mov cx, 11
-    mov di, run_command_file
-.loop:
-    mov byte [di], " "
-    inc di
-    loop .loop
-
-    ret
-
-command_run_copy_filename:
-    mov ax, 1
-    mov cx, 2
-    mul cx
-
-    mov si, argv
-    add si, ax
-    mov si, [si]
-
-    mov di, run_command_file
-
-.copy_loop:
-    mov al, [si]
-    test al, al
-    jz .done
-
-    lodsb
-    stosb
-
-    jmp .copy_loop
-
-.done:
-    ret
-
-command_run_copy_file_extension:
-    mov ax, 2
-    mov cx, 2
-    mul cx
-
-    mov si, argv
-    add si, ax
-    mov si, [si]
-
-    mov di, run_command_file
-    add di, 8
-
-.copy_loop:
-    mov al, [si]
-    test al, al
-    jz .done
-
-    lodsb
-    stosb
-
-    jmp .copy_loop
-
-.done:
-    ret
-
-run_command_file: db "           ", 0
-;; ========================================================
-;; Execute command view
-;; ========================================================
-command_view:
-    cmp word [argc], 3
-    jb .not_enugh_arguments
-
-    call command_view_clean_filename
-
-    call command_view_copy_filename
-    call command_view_copy_file_extension
-
-    push es
-    push bx
-
-    mov si, view_command_file
-    call find_file
-    jc .file_not_found
-
-    ;; only print the first 65535 bytes of the file
-    mov cx, [es:bx + root_entry_file_size_offset]
-
-    call load_file
-
-.print_loop:
-    mov ah, 0xe
-    mov al, [es:bx]
-    int 0x10
-
-    inc bx
-    loop .print_loop
-
-    pop bx
-    pop es
-
-    jmp input
-
-.not_enugh_arguments:
-    mov si, view_command_help_string
-    call print_string
-
-    jmp input
-
-.file_not_found:
-    pop bx
-    pop es
-
-    mov si, view_command_file_not_found_begin
-    call print_string
-
-    mov si, view_command_file
-    call print_string
-
-    mov si, view_command_file_not_found_end
-    call print_string
-
-    jmp input
-
-command_view_clean_filename:
-    mov cx, 11
-    mov di, view_command_file
-.loop:
-    mov byte [di], " "
-    inc di
-    loop .loop
-
-    ret
-
-command_view_copy_filename:
-    mov ax, 1
-    mov cx, 2
-    mul cx
-
-    mov si, argv
-    add si, ax
-    mov si, [si]
-
-    mov di, view_command_file
-
-.copy_loop:
-    mov al, [si]
-    test al, al
-    jz .done
-
-    lodsb
-    stosb
-
-    jmp .copy_loop
-
-.done:
-    ret
-
-command_view_copy_file_extension:
-    mov ax, 2
-    mov cx, 2
-    mul cx
-
-    mov si, argv
-    add si, ax
-    mov si, [si]
-
-    mov di, view_command_file
-    add di, 8
-
-.copy_loop:
-    mov al, [si]
-    test al, al
-    jz .done
-
-    lodsb
-    stosb
-
-    jmp .copy_loop
-
-.done:
-    ret
-
-view_command_file: db "           ", 0
-
-;; ========================================================
-;; Execute command dir
-;; ========================================================
-command_dir:
-    mov si, dir_command_label
-    call print_string                               ;; print label of dir command
-
-    push es
-    push bx                                 ;; save current es:bx
-
-    mov bx, boot_segment
-    mov es, bx
-    mov bx, boot_offset                     ;; load boot segment in es:bx
-
-    mov cx, [es:bx + BPB_number_of_root_dir_entries_offset] ;; save max root entries in cx
-
-    mov bx, root_segment
-    mov es, bx
-    mov bx, root_offset                     ;; load boot segment in es:bx
-
-.file_loop:
-    mov ax, [es:bx]
-    cmp ax, 0                               ;; if first byte is 0, terminate loop
-    je .done
-
-    call print_entry                        ;; print entry of file
-
-    add bx, root_entry_size                 ;; add root entry size in bx to point to the next entry
-    loop .file_loop                         ;; loop
-
-.done:
-    pop bx
-    pop es                                  ;; restore current es:bx
-
-    jmp input                               ;; process next input
-
-
-;; ========================================================
-;; Print file entry for dir command
-;; ========================================================
-print_entry:
-    call print_file_created_at
-
-    mov al, " "
-    call print_char
-    mov al, " "
-    call print_char
-
-    call print_file_name
-
-    mov al, " "
-    call print_char
-    mov al, " "
-    call print_char
-
-    call print_file_extension
-
-    mov al, " "
-    call print_char
-    mov al, " "
-    call print_char
-
-    call print_file_attr
-
-    mov al, " "
-    call print_char
-    mov al, " "
-    call print_char
-
-    call print_file_size
-
-    mov al, 0xd
-    call print_char
-
-    mov al, 0xa
-    call print_char                               ;; put new line
-
-    ret
-
-;; ========================================================
-;; Print file created at of root entry in es:bx
-;; ========================================================
-print_file_created_at:
-    mov ax, [es:bx + 0xe]
-    shr ax, 11
-    and ax, 11111b
-    cmp ax, 10
-    jae .print_hour
-
-    push ax
-    mov al, "0"
-    call print_char
-    pop ax
-
-.print_hour:
-    mov dx, ax
-    call print_decimal
-
-    mov al, ":"
-    call print_char
-
-    mov ax, [es:bx + 0xe]
-    shr ax, 5
-    and ax, 111111b
-    cmp ax, 10
-    jae .print_min
-
-    push ax
-    mov al, "0"
-    call print_char
-    pop ax
-
-.print_min:
-    mov dx, ax
-    call print_decimal
-
-    mov al, ":"
-    call print_char
-
-    mov ax, [es:bx + 0xe]
-    and ax, 11111b
-    mov cx, 2
-    mul cx
-
-    cmp ax, 10
-    jae .print_sec
-
-    push ax
-    mov al, "0"
-    call print_char
-    pop ax
-
-.print_sec:
-    mov dx, ax
-    call print_decimal
-
-    mov al, " "
-    call print_char
-
-    mov ax, [es:bx + 0x10]
-    shr ax, 9
-    and ax, 1111111b
-    add ax, 1980
-    mov dx, ax
-    call print_decimal
-
-    mov al, "/"
-    call print_char
-
-    mov ax, [es:bx + 0x10]
-    shr ax, 5
-    and ax, 1111b
-    cmp ax, 10
-    jae .print_month
-
-    push ax
-    mov al, "0"
-    call print_char
-    pop ax
-
-.print_month:
-    mov dx, ax
-    call print_decimal
-
-    mov al, "/"
-    call print_char
-
-    mov ax, [es:bx + 0x10]
-    and ax, 11111b
-    cmp ax, 10
-    jae .print_day
-
-    push ax
-    mov al, "0"
-    call print_char
-    pop ax
-
-.print_day:
-    mov dx, ax
-    call print_decimal
-
-    ret
-
-;; ========================================================
-;; Print file attributes of root entry in es:bx
-;; ========================================================
-print_file_attr:
-    mov dh, 0
-    mov dl, [es:bx + 0x0b]
-    call print_hex
-    ret
-
-;; ========================================================
-;; Print file name of root entry in es:bx
-;; ========================================================
-print_file_name:
-    push cx
-    push si
-
-    mov cx, 8
-    xor si, si
-.print_loop:
-    mov al, [es:bx + si]
-    call print_char
-
-    add si, 1
-    loop .print_loop
-
-    pop si
-    pop cx
-    ret
-
-;; ========================================================
-;; Print file extension of root entry in es:bx
-;; ========================================================
-print_file_extension:
-    push cx
-    push si
-
-    mov cx, 3
-    mov si, 8
-.print_loop:
-    mov al, [es:bx + si]
-    call print_char
-
-    add si, 1
-    loop .print_loop
-
-    pop si
-    pop cx
-    ret
-
-;; ========================================================
-;; Print file extension of root entry in es:bx
-;; ========================================================
-print_file_size:
-    push cx
-
-    mov dx, [es:bx + root_entry_file_size_offset + 2]     ;; move upper file size into dx
-    mov ax, [es:bx + root_entry_file_size_offset]         ;; move lower file size into ax
-    mov di, print_file_size_buffer_end
-
-    call print_32bit_decimal
-    
-    mov si, print_file_size_string
-    call print_string
-
-    pop cx
-    ret
-
-print_file_size_buffer: rb 11
-print_file_size_buffer_end:
-print_file_size_string: db " bytes", 0
-
-;; ========================================================
-;; Execute command disk
-;; ========================================================
-command_disk:
-    push es
-    push bx
-    push cx
-
-    ;; ========================================================
-    ;; Calculated free clusters of the disk
-    ;; ========================================================
-    ;; RootDirSize = (BPB_number_of_root_dir_entries * 32) / BPB_sector_size
-    ;; FatTableSize = BPB_number_of_fats * BPB_sectors_per_fat
-    ;; DataSectors = BPB_logical_sectors - (BPB_reserved_sectors + FatTableSize + RootDirSize)
-    ;; TotalClusters = DataSectors/BPB_sectors_per_cluster
-
-    mov bx, boot_segment
-    mov es, bx
-    mov bx, boot_offset
-
-    ;; Calculate RootDirSize in ax
-    mov ax, [es:bx + BPB_number_of_root_dir_entries_offset]
-    shl ax, 5
-    xor dx, dx
-    mov cx, [es:bx + BPB_sector_size_offset]
-    div cx
-
-    mov [command_disk_root_size], ax
-
-    ;; Calculate FatTableSize
-    mov ah, 0
-    mov al, [es:bx + BPB_number_of_fats_offset]
-    mov cx, [es:bx + BPB_sectors_per_fat_offset]
-    mul cx
-
-    mov [command_disk_fat_table_size], ax
-
-    ;; Calculate DataSectors
-    mov ax, [es:bx + BPB_reserved_sectors_offset]
-    mov cx, [command_disk_fat_table_size]
-    add ax, cx
-    mov cx, [command_disk_root_size]
-    add ax, cx
-    mov cx, [es:bx + BPB_logical_sectors_offset]
-    xchg ax, cx
-    sub ax, cx
-
-    ;; Calculate TotalClusters
-    xor dx, dx
-    mov ch, 0
-    mov cl, [es:bx + BPB_sectors_per_cluster_offset]
-    mul cx
-
-    mov [command_disk_total_clusters], ax
-
-    ;; Calculate all used clusters
-    mov cx, 2
-.cluster_loop:
-    push cx
-    ;; NextClusterEntry = cluster * 3 / 2
-    mov bx, fat_segment
-    mov es, bx
-    mov bx, fat_offset
-
-    mov ax, cx
-
-    mov cx, 3
-    mul cx                                  ;; multiply cluster by 3
-    mov cx, 2
-    xor dx, dx
-    div cx                                  ;; divide cluster by 2
-
-    add bx, ax
-    mov ax, [es:bx]                         ;; get next cluster
-
-    test dx, dx
-    jz .even                                ;; test remaining of division
-
-    shr ax, 4                               ;; if odd, the shift left by 4
-    jmp .check_cluster
-
-.even:
-    and ax, 0xfff                           ;; if even, only and with 0xfff
-
-.check_cluster:
-    cmp ax, 0xff7
-    je .next_cluster
-
-    cmp ax, 0xff8
-    jae .free_cluster
-
-    test ax, ax
-    jnz .next_cluster
-
-.free_cluster:
-    mov ax, [command_disk_free_clusters]
-    inc ax
-    mov [command_disk_free_clusters], ax
-
-.next_cluster:
-
-    pop cx
-    inc cx
-
-    cmp cx, [command_disk_total_clusters]
-    je .done
-
-    jmp .cluster_loop
-.done:
-    mov bx, boot_segment
-    mov es, bx
-    mov bx, boot_offset
-
-    ;; ========================================================
-    ;; Calculate total size of the disk
-    ;; ========================================================
-    mov ax, [command_disk_total_clusters]
-    mov cx, [es:bx + BPB_sector_size_offset]
-    mul cx
-
-    mov word [command_disk_total_size + 2], dx
-    mov word [command_disk_total_size], ax
-
-    ;; ========================================================
-    ;; Calculated free size of the disk
-    ;; ========================================================
-    mov ax, [command_disk_free_clusters]
-    mov cx, [es:bx + BPB_sector_size_offset]
-    mul cx
-
-    mov word [command_disk_free_size + 2], dx
-    mov word [command_disk_free_size], ax
-
-    ;; ========================================================
-    ;; Calculated used size of the disk
-    ;; ========================================================
-    mov ax, [command_disk_total_clusters]
-    mov cx, [command_disk_free_clusters]
-    sub ax, cx
-    mov cx, [es:bx + BPB_sector_size_offset]
-    mul cx
-
-    mov word [command_disk_used_size + 2], dx
-    mov word [command_disk_used_size], ax
-
-    ;; ========================================================
-    ;; Print all information
-    ;; ========================================================
-
-    mov si, disk_command_label
-    call print_string
-
-    ;; Print total size
-    mov si, command_disk_total_string
-    call print_string
-
-    mov dx, [command_disk_total_size + 2]
-    mov ax, [command_disk_total_size]
-
-    call print_32bit_decimal
-
-    mov si, command_disk_bytes_string
-    call print_string
-
-    ;; Print used size
-    mov si, command_disk_used_string
-    call print_string
-
-    mov dx, [command_disk_used_size + 2]
-    mov ax, [command_disk_used_size]
-
-    call print_32bit_decimal
-
-    mov si, command_disk_bytes_string
-    call print_string
-
-    ;; Print free size
-    mov si, command_disk_free_string
-    call print_string
-
-    mov dx, [command_disk_free_size + 2]
-    mov ax, [command_disk_free_size]
-
-    call print_32bit_decimal
-
-    mov si, command_disk_bytes_string
-    call print_string
-
-    pop cx
-    pop bx
-    pop es
-
-    jmp input
-
-command_disk_root_size:      rw 1
-command_disk_fat_table_size: rw 1
-command_disk_total_clusters: rw 1
-command_disk_free_clusters:  rw 1
-
-command_disk_total_size:     rd 1
-command_disk_used_size:      rd 1
-command_disk_free_size:      rd 1
-
-command_disk_total_string: db "Total: ", 0
-command_disk_used_string:  db "Used:  ", 0
-command_disk_free_string:  db "Free:  ", 0
-command_disk_bytes_string: db " bytes", 0xd, 0xa, 0
 
 ;; ========================================================
 ;; Execute when command not found
@@ -1063,66 +325,19 @@ command_not_found_string_end:
     db "' not found :(", 0xd, 0xa, 0xd, 0xa
     db "Type 'help' to see command list", 0xd, 0xa, 0
 
-command_not_implemented_string_begin:
-    db "Command '", 0
-command_not_implemented_string_end:
-    db "' is not implemented yet :(", 0xd, 0xa, 0
-
-help_command:
+command_help_name:
     db "help", 0
-help_command_output:
-    db " - help                   -- show all available commands", 0xd, 0xa
-    db " - echo                   -- print it's arguments on the screen", 0xd, 0xa
-    db " - view                   -- show file content", 0xd, 0xa
-    db " - run                    -- run program", 0xd, 0xa
-    db " - clear                  -- clear entire screen", 0xd, 0xa
-    db " - dir                    -- list root dir", 0xd, 0xa
-    db " - disk                   -- show disk information", 0xd, 0xa
-    db " - reboot                 -- reboot operating system", 0xd, 0xa, 0
-
-reboot_command:
+command_reboot_name:
     db "reboot", 0
-
-clear_command:
+command_clear_name:
     db "clear", 0
-
-dir_command:
+command_dir_name:
     db "dir", 0
-
-dir_command_label:
-    db "Created At           Name      Ext  Attr    Size", 0xd, 0xa
-    db "-------------------  --------- ---  ------- ----", 0xd, 0xa, 0xd, 0xa
-    db "hh:mm:ss yyyy:mm:dd", 0xd, 0xa, 0xd, 0xa, 0xd, 0xa, 0
-
-disk_command:
+command_disk_name:
     db "disk", 0
-disk_command_label:
-    db "Disk info", 0xd, 0xa
-    db "----------", 0xd, 0xa, 0xd, 0xa, 0
-
-echo_command:
+command_echo_name:
     db "echo", 0
-
-view_command:
+command_view_name:
     db "view", 0
-
-view_command_help_string:
-    db "[Usage]: view <file_name> <file_extension>", 0xd, 0xa, 0
-
-view_command_file_not_found_begin:
-    db "[ERROR]: File '", 0
-
-view_command_file_not_found_end:
-    db "' not found.", 0xd, 0xa, 0
-
-runn_command:
+command_run_name:
     db "run", 0
-
-run_command_help_string:
-    db "[Usage]: run <file_name> <file_extension>", 0xd, 0xa, 0
-
-run_command_file_not_found_begin:
-    db "[ERROR]: File '", 0
-
-run_command_file_not_found_end:
-    db "' not found.", 0xd, 0xa, 0
