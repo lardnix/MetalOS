@@ -13,14 +13,16 @@ command_view:
     push es
     push bx
 
+    call get_entry_from_path
+
     mov si, command_view_file_buffer
-    call find_file
+    call find_entry
     jc .file_not_found
 
     ;; only print the first 65535 bytes of the file
-    mov cx, [es:bx + root_entry_file_size_offset]
+    mov cx, [es:bx + entry_file_size_offset]
 
-    call load_file
+    call load_entry
 
 .print_loop:
     mov ah, 0xe
@@ -107,8 +109,10 @@ command_view_copy_file_extension:
     test al, al
     jz .done
 
-    lodsb
-    stosb
+    mov al, [si]
+    inc si
+    mov [di], al
+    inc di
 
     jmp .copy_loop
 
@@ -119,7 +123,7 @@ command_view_file_buffer: db "           ", 0
 
 
 command_view_help_string:
-    db "[Usage]: view <file_name> <file_extension>", 0xd, 0xa, 0
+    db "[USAGE]: view <file_name> <file_extension>", 0xd, 0xa, 0
 
 command_view_file_not_found_error_begin:
     db "[ERROR]: File '", 0

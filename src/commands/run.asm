@@ -1,3 +1,4 @@
+include "../memory_layout.asm"
 ;; ========================================================
 ;; Command run
 ;; ========================================================
@@ -10,11 +11,14 @@ command_run:
     call command_run_copy_filename
     call command_run_copy_file_extension
 
+    call get_entry_from_path
+
     mov si, command_run_file_buffer
-    call find_file
+
+    call find_entry
     jc .file_not_found
 
-    call load_file
+    call load_entry
 
     mov ax, loaded_file_segment             ;; move to ax the kernel segment
 
@@ -96,8 +100,10 @@ command_run_copy_file_extension:
     test al, al
     jz .done
 
-    lodsb
-    stosb
+    mov al, [si]
+    inc si
+    mov [di], al
+    inc di
 
     jmp .copy_loop
 
@@ -107,7 +113,7 @@ command_run_copy_file_extension:
 command_run_file_buffer: db "           ", 0
 
 command_run_help_string:
-    db "[Usage]: run <file_name> <file_extension>", 0xd, 0xa, 0
+    db "[USAGE]: run <file_name> <file_extension>", 0xd, 0xa, 0
 
 command_run_file_not_found_error_begin:
     db "[ERROR]: File '", 0

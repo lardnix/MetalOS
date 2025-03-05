@@ -3,7 +3,7 @@
 include "memory_layout.asm"
 
 include "lib/fat12/bpb.asm"
-include "lib/fat12/root_entry.asm"
+include "lib/fat12/entry.asm"
 
 input_string_buffer_capacity = 100
 arguments_buffer_capacity = 100
@@ -31,6 +31,14 @@ main:
     ;; Emulate a basic shell
     ;; ========================================================
 input:
+    mov al, 0xd
+    call print_char
+    mov al, 0xa
+    call print_char
+
+    mov si, path
+    call print_string
+
     mov si, input_indicator
     call print_string
 
@@ -250,6 +258,14 @@ handle_command:
     cmp ax, 1
     je command_disk
 
+    ;; ========================================================
+    ;; Check 'cd' command
+    ;; ========================================================
+    mov di, command_cd_name
+    call string_equal
+    cmp ax, 1
+    je command_cd
+
     jmp command_not_found                   ;; command not found
 
 include "commands/help.asm"
@@ -260,7 +276,7 @@ include "commands/run.asm"
 include "commands/view.asm"
 include "commands/dir.asm"
 include "commands/disk.asm"
-
+include "commands/cd.asm"
 
 ;; ========================================================
 ;; Execute when command not found
@@ -286,8 +302,8 @@ include "lib/read_disk.asm"
 include "lib/fat12/lba_to_chs.asm"
 include "lib/fat12/cluster_to_lba.asm"
 include "lib/fat12/get_next_cluster.asm"
-include "lib/fat12/find_file.asm"
-include "lib/fat12/load_file.asm"
+include "lib/fat12/find_entry.asm"
+include "lib/fat12/load_entry.asm"
 
 include "lib/print_char.asm"
 include "lib/print_string.asm"
@@ -295,6 +311,7 @@ include "lib/print_hex.asm"
 include "lib/print_decimal.asm"
 include "lib/print_32bit_decimal.asm"
 include "lib/string_equal.asm"
+include "lib/get_entry_from_path.asm"
 
 initialized:
     rb 1
@@ -303,8 +320,12 @@ header:
     db "Welcome to OS", 0xd, 0xa, 0xd, 0xa
     db "type 'help' to list commands", 0xd, 0xa, 0
 
+path:
+    db "/"
+    rb 100
+
 input_indicator:
-    db 0xd, 0xa, "> ", 0
+    db " > ", 0
 
 input_string: rb input_string_buffer_capacity
 
@@ -341,3 +362,5 @@ command_view_name:
     db "view", 0
 command_run_name:
     db "run", 0
+command_cd_name:
+    db "cd", 0

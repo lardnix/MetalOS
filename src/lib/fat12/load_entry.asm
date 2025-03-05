@@ -1,17 +1,17 @@
 include "../../memory_layout.asm"
 
-include "root_entry.asm"
+include "entry.asm"
 
 ;; ========================================================
-;; Load file name at es:bx root entry and put pointer at es:bx
+;; Load entry at es:bx and put pointer at es:bx
 ;; ========================================================
-;; load file expects 'find_file', 'cluster_to_lba', 'lba_to_chs', 'read_disk', 'get_next_cluster' included
-;; es:bx = root file entry
-load_file:
+;; load file expects 'cluster_to_lba', 'lba_to_chs', 'read_disk', 'get_next_cluster' included
+;; es:bx = entry
+load_entry:
     push ax
     push cx
 
-    mov ax, [es:bx + root_entry_first_cluster_offset]
+    mov ax, [es:bx + entry_first_cluster_offset]
 
     mov bx, loaded_file_segment
     mov es, bx

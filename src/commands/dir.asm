@@ -14,9 +14,7 @@ command_dir:
 
     mov cx, [es:bx + BPB_number_of_root_dir_entries_offset] ;; save max root entries in cx
 
-    mov bx, root_segment
-    mov es, bx
-    mov bx, root_offset                     ;; load boot segment in es:bx
+    call get_entry_from_path
 
 .file_loop:
     mov ax, [es:bx]
@@ -25,7 +23,7 @@ command_dir:
 
     call print_entry                        ;; print entry of file
 
-    add bx, root_entry_size                 ;; add root entry size in bx to point to the next entry
+    add bx, entry_size                      ;; add root entry size in bx to point to the next entry
     loop .file_loop                         ;; loop
 
 .done:
@@ -217,8 +215,8 @@ print_file_extension:
 print_file_size:
     push cx
 
-    mov dx, [es:bx + root_entry_file_size_offset + 2]     ;; move upper file size into dx
-    mov ax, [es:bx + root_entry_file_size_offset]         ;; move lower file size into ax
+    mov dx, [es:bx + entry_file_size_offset + 2] ;; move upper file size into dx
+    mov ax, [es:bx + entry_file_size_offset]     ;; move lower file size into ax
     mov di, print_file_size_buffer_end
 
     call print_32bit_decimal

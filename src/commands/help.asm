@@ -9,6 +9,7 @@ command_help:
 
 command_help_output:
     db " - help                   -- show all available commands", 0xd, 0xa
+    db " - cd                     -- change directory", 0xd, 0xa
     db " - echo                   -- print it's arguments on the screen", 0xd, 0xa
     db " - view                   -- show file content", 0xd, 0xa
     db " - run                    -- run program", 0xd, 0xa

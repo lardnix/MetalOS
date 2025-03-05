@@ -22,6 +22,8 @@ $(OS): $(BIN) $(HD) $(BOOT) $(KERNEL) $(PROGRAM)
 	mcopy -o -i $(HD) hello.txt ::/hello.txt
 	rm hello.txt
 
+	if ! mdir -i $(HD) ::/bin > /dev/null 2>&1; then mmd -i $(HD) ::/bin; fi
+
 $(HD): $(BUILD)
 	dd if=/dev/zero of=$(HD) bs=512 count=2880
 	mkfs.fat -F12 $(HD)
