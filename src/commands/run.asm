@@ -11,6 +11,7 @@ command_run:
     call command_run_copy_filename
     call command_run_copy_file_extension
 
+    mov si, path
     call get_entry_from_path
 
     mov si, command_run_file_buffer

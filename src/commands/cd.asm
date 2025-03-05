@@ -11,6 +11,7 @@ command_cd:
     push es
     push bx
 
+    mov si, path
     call get_entry_from_path
 
     mov si, command_cd_name_buffer

@@ -16,4 +16,5 @@ command_help_output:
     db " - clear                  -- clear entire screen", 0xd, 0xa
     db " - dir                    -- list root dir", 0xd, 0xa
     db " - disk                   -- show disk information", 0xd, 0xa
-    db " - reboot                 -- reboot operating system", 0xd, 0xa, 0
+    db " - reboot                 -- reboot operating system", 0xd, 0xa
+    db " - test                   -- test kernel", 0xd, 0xa, 0

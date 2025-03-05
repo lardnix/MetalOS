@@ -14,6 +14,7 @@ command_dir:
 
     mov cx, [es:bx + BPB_number_of_root_dir_entries_offset] ;; save max root entries in cx
 
+    mov si, path
     call get_entry_from_path
 
 .file_loop:

@@ -266,6 +266,14 @@ handle_command:
     cmp ax, 1
     je command_cd
 
+    ;; ========================================================
+    ;; Check 'test' command
+    ;; ========================================================
+    mov di, command_test_name
+    call string_equal
+    cmp ax, 1
+    je command_test
+
     jmp command_not_found                   ;; command not found
 
 include "commands/help.asm"
@@ -277,6 +285,7 @@ include "commands/view.asm"
 include "commands/dir.asm"
 include "commands/disk.asm"
 include "commands/cd.asm"
+include "commands/test.asm"
 
 ;; ========================================================
 ;; Execute when command not found
@@ -364,3 +373,5 @@ command_run_name:
     db "run", 0
 command_cd_name:
     db "cd", 0
+command_test_name:
+    db "test", 0

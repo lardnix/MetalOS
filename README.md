@@ -52,3 +52,4 @@ List of all supported commands.
 | dir    | list root directory                |
 | disk   | show disk information              |
 | reboot | reoot operating system             |
+| test   | test kernel                        |

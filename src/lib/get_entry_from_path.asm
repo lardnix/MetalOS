@@ -1,14 +1,14 @@
 include "../memory_layout.asm"
 
 ;; ========================================================
-;; Get entry from current path and put at es:bx
+;; Get entry from current path at si and put at es:bx
 ;; ========================================================
+;; si = path
 get_entry_from_path:
     mov bx, root_segment
     mov es, bx
     mov bx, root_offset
 
-    mov si, path
     inc si
 .folder_loop:
 
