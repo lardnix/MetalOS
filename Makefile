@@ -16,13 +16,14 @@ $(OS): $(BIN) $(HD) $(BOOT) $(KERNEL) $(PROGRAM)
 	dd if=$(BOOT) of=$(HD) bs=512 seek=0 conv=notrunc
 
 	mcopy -o -i $(HD) $(KERNEL) ::/kernel.bin
-	mcopy -o -i $(HD) $(PROGRAM) ::/test.bin
+
+	if ! mdir -i $(HD) ::/bin > /dev/null 2>&1; then mmd -i $(HD) ::/bin; fi
+
+	mcopy -o -i $(HD) $(PROGRAM) ::/bin/test.bin
 
 	echo "Hello, World!" > hello.txt
 	mcopy -o -i $(HD) hello.txt ::/hello.txt
 	rm hello.txt
-
-	if ! mdir -i $(HD) ::/bin > /dev/null 2>&1; then mmd -i $(HD) ::/bin; fi
 
 $(HD): $(BUILD)
 	dd if=/dev/zero of=$(HD) bs=512 count=2880
