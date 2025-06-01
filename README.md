@@ -11,7 +11,10 @@ A tiny a kernel bare metal based operating system. It runs in 16 bits real mode 
 Some TODOs that i have in my mind.
 
 - [ ] Full FAT12 support (read, write, update, delete...).
-- [ ] A tiny text editor for write something.
+- [ ] Syscall system that my custom programs can use
+- [ ] Tiny text editor for write something.
+- [ ] Mini compiler to create programs inside the OS
+- [ ] Internet connection (I even don't know if this is possible)
 
 ## How to Build
 
