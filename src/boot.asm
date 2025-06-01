@@ -6,7 +6,7 @@
 ;; ========================================================
 ;;   FAT12 BPB(BIOS Parameter Block)
 ;; ========================================================
-OEM_label:                  db "mkfs.fat"
+OEM_label:                  db "Metal Os"
 sector_size:                dw 512
 sectors_per_cluster:        db 1
 reserved_sectors:           dw 1            ;; reserved for boot
